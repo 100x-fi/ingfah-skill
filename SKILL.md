@@ -7,6 +7,8 @@ description: Interact with the Ingfah client platform through client API-key aut
 
 Use the user's Ingfah client API key to call only the client API routes listed below.
 
+The default Ingfah API base URL is `https://api.ingfah.ai`. Use another base URL only when the user explicitly provides one.
+
 ## Authentication
 
 - Send the key only in the `X-Api-Key` request header.
@@ -14,7 +16,7 @@ Use the user's Ingfah client API key to call only the client API routes listed b
 - Never echo, log, save, commit, or include the key in generated files, URLs, or error messages.
 - Do not ask the user to put the key in this repository.
 - Treat the key as available only for the current task unless the user explicitly requests persistent configuration.
-- Use HTTPS and the user-provided Ingfah API base URL.
+- Use HTTPS and the configured Ingfah API base URL.
 - Before making a request, explain when the requested operation requires a write scope.
 - Ask for explicit confirmation immediately before creating, deleting, pausing, resuming, or cancelling anything.
 - Redact secrets from all displayed request and response details.
