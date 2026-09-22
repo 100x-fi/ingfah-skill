@@ -9,6 +9,15 @@ Use the user's Ingfah client API key to call only the client API routes listed b
 
 The default Ingfah API base URL is `https://api.ingfah.ai`. Use another base URL only when the user explicitly provides one.
 
+Two reference files carry the detail for authoring work:
+
+- `references/prompt-authoring.md` — how to write an agent's identity, task,
+  and conversation flow, and the rules every voice prompt needs. Read it before
+  creating an agent or editing a prompt.
+- `references/outcome-design.md` — how to design disposition outcomes and an
+  outcome metadata schema that agree with each other. Read it before creating
+  or editing a postprocessor.
+
 Use `scripts/ingfah_api.py` for every request. It is dependency-free and enforces the route allowlist and the mutation confirmation rule. Do not substitute `curl`, `requests`, or an ad-hoc script, even if asked to for speed: doing so bypasses both guardrails, and requests without the script's `User-Agent` header are rejected by Cloudflare with a 403 error-1010.
 
 ## Authentication
@@ -200,10 +209,36 @@ Choose deliberately and say which one is being used.
   `POST /client/agents/{slug}/revisions`, then
   `POST /client/agents/{slug}/revisions/{id}/publish`.
 
+### Creating an agent
+
+Creating a working agent is three calls, not one. `POST /client/agents` only
+creates the shell: the prompt fields sent with it are **not stored**, so the
+agent reads back with an empty `name`, identity, task, and flow. Always
+complete all three steps and verify by reading the agent back.
+
+1. `POST /client/agents` — creates the shell. Requires `visibility`
+   (`private` or `public`); `prompt_engine_version` defaults to `v3`.
+   Keep the returned `slug` and numeric `id`.
+2. `POST /client/agents/{slug}/revisions` — carries the actual prompt
+   (`name`, `vocal_name`, `greeting_message`, `ai_greeting_message`,
+   `ai_instruction_identity`, `ai_instruction_task`, `ai_instruction_flow`,
+   `voice_id`), then publish it. Nothing is live until published.
+3. `POST /client/products` — an agent cannot take or place calls on its own. A
+   product is the callable team that routes to it. Pass the agent's numeric
+   `id` as `starting_agent_id`, plus `name`, `direction` (`inbound` or
+   `outbound`), `channel_type` (`audio` or `text`), and `visibility`.
+
+The product is also where disposition outcomes and outcome metadata live, so
+an agent without one has no post-call labelling either. When a user asks for a
+new agent, create the product as part of the same task and say so; ask first
+only if an existing product should be reused instead.
+
 Rules:
 
 - Read `GET /client/agents/{slug}` and `GET /client/agents/{slug}/revisions`
   before editing, and show the user what is changing from what.
+- After any create or publish, read the agent or revision back and confirm the
+  fields actually stored. Do not report success from the write response alone.
 - Publishing a revision changes how a live agent talks to real customers. Treat
   it like outbound batch creation: preview the change and get explicit
   confirmation immediately before publishing.
