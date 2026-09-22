@@ -23,6 +23,7 @@ ROUTE_PATTERNS = (
     ("GET", re.compile(r"^/client/(ai-agent-teams|disposition-outcomes|products)$")),
     ("GET", re.compile(r"^/client/ai-agent-teams/[^/]+/customer-context-variables$")),
     ("GET", re.compile(r"^/client/products/[^/]+$")),
+    ("POST", re.compile(r"^/client/products$")),
     ("POST", re.compile(r"^/client/products/[^/]+/postprocessors$")),
     ("PUT", re.compile(r"^/client/products/[^/]+/postprocessors/[^/]+$")),
     ("DELETE", re.compile(r"^/client/products/[^/]+/postprocessors/[^/]+$")),

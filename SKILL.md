@@ -48,6 +48,7 @@ python3 scripts/ingfah_api.py --confirm POST /client/outbound/batches/7/pause
 
 ### `client_products:write`
 
+- `POST /client/products`
 - `POST /client/products/{id}/postprocessors`
 - `PUT /client/products/{id}/postprocessors/{postprocessorId}`
 - `DELETE /client/products/{id}/postprocessors/{postprocessorId}`
