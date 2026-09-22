@@ -133,5 +133,41 @@ class IngfahApiTests(unittest.TestCase):
         self.assertEqual(message, "Ingfah API returned HTTP 404: resource not found")
 
 
+    def test_agent_and_postprocessor_write_routes_are_allowed(self):
+        for method, path in (
+            ("PUT", "/client/agents/my-agent/description"),
+            ("PUT", "/client/agents/my-agent/visibility"),
+            ("POST", "/client/agents/my-agent/revisions"),
+            ("POST", "/client/agents/my-agent/revisions/12/publish"),
+            ("DELETE", "/client/agents/my-agent/revisions/12"),
+            ("POST", "/client/products/227/postprocessors"),
+            ("PUT", "/client/products/227/postprocessors/451"),
+            ("DELETE", "/client/products/227/postprocessors/451"),
+        ):
+            self.assertTrue(ingfah_api._is_allowed(method, path), f"{method} {path}")
+            self.assertTrue(ingfah_api._is_mutation(method, path), f"{method} {path}")
+
+    def test_product_detail_read_is_allowed(self):
+        self.assertTrue(ingfah_api._is_allowed("GET", "/client/products/227"))
+        self.assertFalse(ingfah_api._is_mutation("GET", "/client/products/227"))
+
+    def test_agent_writes_still_require_confirmation(self):
+        with patch.dict(os.environ, {"INGFAH_API_KEY": "secret-key"}, clear=False), patch(
+            "scripts.ingfah_api.urllib.request.urlopen"
+        ) as urlopen:
+            for method, path in (
+                ("POST", "/client/agents/my-agent/revisions/12/publish"),
+                ("DELETE", "/client/products/227/postprocessors/451"),
+            ):
+                with self.assertRaises(ingfah_api.ClientError):
+                    ingfah_api.request(method, path)
+            urlopen.assert_not_called()
+
+    def test_unlisted_product_subroutes_stay_rejected(self):
+        for path in ("/client/products/227/automations",
+                     "/client/products/227/postprocessors"):
+            self.assertFalse(ingfah_api._is_allowed("GET", path), path)
+
+
 if __name__ == "__main__":
     unittest.main()
