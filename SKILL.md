@@ -225,8 +225,8 @@ Every prompt this skill writes must be **cache-safe**: the prompt body is
 identical for every customer, and per-call data is referenced by name rather
 than written in. Leave `prompt_engine_version` at its default on a new agent,
 and keep an existing agent's version unchanged. See
-`references/prompt-authoring.md` for the rules and what
-`{{customerContext.*}}` renders to.
+`references/prompt-authoring.md` for the rules, what `{{customerContext.*}}`
+renders to, and how to branch on customer data with Jinja.
 
 2. `POST /client/agents/{slug}/revisions` — carries the actual prompt
    (`name`, `vocal_name`, `greeting_message`, `ai_greeting_message`,

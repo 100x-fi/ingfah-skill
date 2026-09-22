@@ -144,6 +144,66 @@ Any prompt this skill produces must follow these rules. When editing an
 existing agent, keep its configured prompt engine version as it is; when
 creating a new one, leave the default.
 
+## Templating with Jinja
+
+Prompt text is rendered through a Jinja2-compatible template engine, so a
+prompt can branch and loop on customer context instead of stating every case
+in prose. Tags (`{% ... %}`) are evaluated against the **real** customer data,
+even though `{{ ... }}` interpolations of customer fields become markers.
+
+Common uses:
+
+```jinja
+{% if customerContext.is_existing_customer %}
+ลูกค้าเคยสั่งซื้อกับเราแล้ว ให้ทักแบบลูกค้าเก่า และข้ามการแนะนำบริษัท
+{% else %}
+ลูกค้าใหม่ ให้แนะนำบริษัทสั้น ๆ หนึ่งประโยคก่อนเข้าเรื่อง
+{% endif %}
+```
+
+```jinja
+{% if customerContext.outstanding_amount %}
+แจ้งยอดค้างชำระจาก [outstanding_amount] ห้ามคำนวณหรือปัดเศษเอง
+{% endif %}
+```
+
+```jinja
+{% for item in customerContext.recent_orders %}
+- {{ item.name }}
+{% endfor %}
+```
+
+Supported: `{% if %}` / `{% elif %}` / `{% else %}` / `{% endif %}`,
+`{% for %}` / `{% endfor %}`, `{% set %}`, comparisons, boolean operators,
+and truthiness tests. The built-in time variables are in scope for tags too,
+so `{% if hour < 12 %}` works.
+
+### Rules
+
+- **A template error does not fail loudly.** If the prompt does not compile,
+  the platform logs it and falls back to plain substitution — which means your
+  `{% if %}` tags stay in the prompt as literal text and the agent may read
+  conditions aloud. Nothing surfaces as an error on publish. Keep tags simple,
+  balance every block, and read the published revision back before trusting it.
+- **Branching costs cache.** Each distinct combination of branches produces a
+  different prompt body, and only identical bodies share a cache entry. A
+  handful of coarse branches is fine; a prompt that branches on many fields
+  fragments the cache into near-unique bodies. Prefer one conditional over
+  three, and prefer a marker the model reads over a branch that rewrites the
+  text.
+- **Branch on shape, not on values.** Use conditionals for cases that need
+  genuinely different instructions — existing vs new customer, has an
+  outstanding balance vs not. Do not use them to inline a value; that is what
+  markers are for.
+- **Guard optional fields.** A field the option does not always supply should
+  be wrapped in `{% if %}` so the surrounding sentence disappears when it is
+  missing, rather than leaving a dangling marker.
+- **Never put a tag inside a spoken example.** `examples` are verbatim scripts;
+  a template tag that survives into one gets read aloud. Put the conditional
+  around the instruction instead.
+- **Do not template the flow structure.** State ids and transitions are data,
+  not text — branch inside `instructions`, never across state boundaries.
+
 ## Voice and TTS
 
 - Use `<say-as type="thai_money">65</say-as>` for currency (do not add บาท
@@ -196,7 +256,9 @@ creating a new one, leave the default.
 5. The first state forbids re-greeting.
 6. No per-call value is written into the prompt body, and every
    `{{customerContext.*}}` name is one the team actually supplies.
-7. The disposition outcome list and the outcome metadata schema agree with the
+7. Every Jinja block is balanced, and the published revision was read back to
+   confirm no template tag survived as literal text.
+8. The disposition outcome list and the outcome metadata schema agree with the
    flow — every outcome the flow can produce is a label, and vice versa.
 
 Publish only after the user confirms. A published revision changes how the
