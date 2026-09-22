@@ -36,12 +36,6 @@ ROUTE_PATTERNS = (
     ("GET", re.compile(r"^/client/outbound/batches/[^/]+/records/download$")),
     ("POST", re.compile(r"^/client/outbound/batches$")),
     ("POST", re.compile(r"^/client/outbound/batches/[^/]+/(pause|resume|cancel)$")),
-    ("GET", re.compile(r"^/client/text-chat-session-list(?:/csv)?$")),
-    ("GET", re.compile(r"^/client/text-chats/conversations(?:/[^/]+)?$")),
-    ("GET", re.compile(r"^/client/text-chats/chat-sessions-list(?:/csv)?$")),
-    ("GET", re.compile(r"^/client/analytics/(summary|short-calls|hourly-charts|duration-histogram|heatmap|speech-ratio)$")),
-    ("GET", re.compile(r"^/client/analytics/report/download$")),
-    ("GET", re.compile(r"^/client/text-analytics/(summary|messages-hourly|heatmap)$")),
 )
 
 
@@ -133,9 +127,17 @@ def _format_api_error(status: int, body: Any) -> str:
     return f"Ingfah API returned HTTP {status}"
 
 
-def _parse_json(value: str) -> Any:
+def _load_json_body(value: str) -> Any:
+    """Accept either an inline JSON document or a path to a JSON file."""
+    text = value
+    if not value.lstrip().startswith(("{", "[")):
+        try:
+            with open(value, encoding="utf-8") as handle:
+                text = handle.read()
+        except OSError as error:
+            raise ClientError(f"could not read JSON body file: {error.strerror}") from None
     try:
-        return json.loads(value)
+        return json.loads(text)
     except json.JSONDecodeError as error:
         raise ClientError(f"invalid JSON body: {error.msg}") from None
 
@@ -145,12 +147,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("method", choices=("GET", "POST", "PUT", "PATCH", "DELETE"))
     parser.add_argument("path")
     parser.add_argument("--query", default="", help="URL-encoded query string, including the leading ?")
-    parser.add_argument("--json", dest="json_body", help="JSON request body")
+    parser.add_argument("--json", dest="json_body", help="JSON request body, inline or a path to a .json file")
     parser.add_argument("--confirm", action="store_true", help="confirm a state-changing request")
     args = parser.parse_args(argv)
 
     try:
-        body = _parse_json(args.json_body) if args.json_body else None
+        body = _load_json_body(args.json_body) if args.json_body else None
         response = request(args.method, args.path, body, confirm=args.confirm, query=args.query)
         if isinstance(response.body, (dict, list)):
             print(json.dumps(response.body, ensure_ascii=False, indent=2))

@@ -1,5 +1,6 @@
 import io
 import json
+import tempfile
 import os
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -90,6 +91,31 @@ class IngfahApiTests(unittest.TestCase):
                     ingfah_api.main(["GET", "/client/products"]), 0
                 )
         self.assertNotIn(secret, output.getvalue())
+
+    def test_json_body_accepts_inline_document(self):
+        self.assertEqual(ingfah_api._load_json_body('{"name": "batch"}'), {"name": "batch"})
+
+    def test_json_body_accepts_file_path(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+            handle.write('{"name": "from-file"}')
+            path = handle.name
+        self.addCleanup(os.unlink, path)
+        self.assertEqual(ingfah_api._load_json_body(path), {"name": "from-file"})
+
+    def test_json_body_file_error_is_user_safe(self):
+        with self.assertRaisesRegex(ingfah_api.ClientError, "could not read JSON body file"):
+            ingfah_api._load_json_body("/nonexistent/body.json")
+
+    def test_undocumented_routes_are_rejected(self):
+        with patch.dict(os.environ, {"INGFAH_API_KEY": "secret-key"}, clear=False):
+            for path in (
+                "/client/analytics/summary",
+                "/client/text-chats/conversations",
+                "/client/text-analytics/summary",
+            ):
+                with self.assertRaises(ingfah_api.ClientError):
+                    ingfah_api.request("GET", path)
+
 
 
 if __name__ == "__main__":

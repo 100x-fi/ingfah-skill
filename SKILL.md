@@ -31,7 +31,10 @@ Examples:
 python3 scripts/ingfah_api.py GET /client/products
 python3 scripts/ingfah_api.py GET /client/outbound/batches/7/records --query '?per_page=20&status=called'
 python3 scripts/ingfah_api.py --confirm POST /client/outbound/batches --json request.json
+python3 scripts/ingfah_api.py --confirm POST /client/outbound/batches/7/pause
 ```
+
+`--json` accepts either a path to a JSON file or an inline JSON document. Run the script from the skill directory, or give its absolute path.
 
 ## Client API-key scopes and routes
 
