@@ -9,6 +9,8 @@ Use the user's Ingfah client API key to call only the client API routes listed b
 
 The default Ingfah API base URL is `https://api.ingfah.ai`. Use another base URL only when the user explicitly provides one.
 
+Use `scripts/ingfah_api.py` for requests. It is dependency-free and enforces the route allowlist and mutation confirmation rules.
+
 ## Authentication
 
 - Send the key only in the `X-Api-Key` request header.
@@ -20,6 +22,16 @@ The default Ingfah API base URL is `https://api.ingfah.ai`. Use another base URL
 - Before making a request, explain when the requested operation requires a write scope.
 - Ask for explicit confirmation immediately before creating, deleting, pausing, resuming, or cancelling anything.
 - Redact secrets from all displayed request and response details.
+
+The script reads `INGFAH_API_KEY` from the process environment. When the user provides a key conversationally, pass it to the script only for the current process; never write it to a file or include it in a command shown to the user.
+
+Examples:
+
+```bash
+python3 scripts/ingfah_api.py GET /client/products
+python3 scripts/ingfah_api.py GET /client/outbound/batches/7/records --query '?per_page=20&status=called'
+python3 scripts/ingfah_api.py --confirm POST /client/outbound/batches --json request.json
+```
 
 ## Client API-key scopes and routes
 
