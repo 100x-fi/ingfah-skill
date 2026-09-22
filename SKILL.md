@@ -79,6 +79,19 @@ Before calling an endpoint, identify its required scope and check the user's int
 
 Do not call backoffice routes, API-key management routes, or client routes not listed in this file. Do not infer that a JWT-only route is available to an API-key caller.
 
+## Outbound batch handling
+
+- There is no supported `GET /client/outbound/batches` list route in the documented client API. Do not invent or retry that route.
+- Batch detail, records, CSV download, pause, resume, and cancel operations require a numeric batch ID in the path.
+- `GET /client/outbound/batches/{id}/records` supports `page`, `per_page`, `search`, `status`, `disposition_outcome`, `sort_by`, and `sort_direction` query parameters.
+- `GET /client/outbound/batches/{id}/records/download` returns a CSV file. Save it only when the user explicitly requests a download or export.
+- `POST /client/outbound/batches` requires `client_outbound_option_id`, `name`, `est_duration_minutes`, and at least one schedule. Each schedule requires `client_product_id`, future `start_time` and `end_time`, `day_slot`, `timezone`, and at least one record.
+- Before creating a batch, retrieve outbound options and products so the request uses a valid option ID, an outbound product ID, and all required record fields.
+- A successful batch creation can start or schedule real outbound calls. Always show a concise preview and obtain explicit user confirmation immediately before sending it.
+- Pause, resume, and cancel are state-changing actions and require explicit confirmation. Cancel is permanent and cannot be undone with resume.
+- If batch creation returns `404 resource not found`, report that creation is unavailable on the configured deployment and do not repeatedly retry or substitute another endpoint.
+- A `404` for a specific batch ID means that batch was not found; it is not evidence that API-key authentication failed.
+
 ## Response handling
 
 Return concise, structured summaries. Preserve identifiers, statuses, timestamps, and relevant error details, but remove credentials and unrelated personal or sensitive data. For downloads, save or present the result only when the user explicitly requests it.
