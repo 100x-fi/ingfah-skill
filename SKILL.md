@@ -12,8 +12,10 @@ The default Ingfah API base URL is `https://api.ingfah.ai`. Use another base URL
 Two reference files carry the detail for authoring work:
 
 - `references/prompt-authoring.md` — how to write an agent's identity, task,
-  and conversation flow, and the rules every voice prompt needs. Read it before
-  creating an agent or editing a prompt.
+  and conversation flow, how customer context works, and the rules every voice
+  prompt needs. **Read it before writing or editing any agent prompt** — a
+  prompt that bakes per-call data into its body is incorrect, not merely
+  suboptimal.
 - `references/outcome-design.md` — how to design disposition outcomes and an
   outcome metadata schema that agree with each other. Read it before creating
   or editing a postprocessor.
@@ -219,6 +221,13 @@ complete all three steps and verify by reading the agent back.
 1. `POST /client/agents` — creates the shell. Requires `visibility`
    (`private` or `public`); `prompt_engine_version` defaults to `v3`.
    Keep the returned `slug` and numeric `id`.
+Every prompt this skill writes must be **cache-safe**: the prompt body is
+identical for every customer, and per-call data is referenced by name rather
+than written in. Leave `prompt_engine_version` at its default on a new agent,
+and keep an existing agent's version unchanged. See
+`references/prompt-authoring.md` for the rules and what
+`{{customerContext.*}}` renders to.
+
 2. `POST /client/agents/{slug}/revisions` — carries the actual prompt
    (`name`, `vocal_name`, `greeting_message`, `ai_greeting_message`,
    `ai_instruction_identity`, `ai_instruction_task`, `ai_instruction_flow`,

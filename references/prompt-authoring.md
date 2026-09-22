@@ -89,6 +89,61 @@ Rules that keep a flow working:
   answer back.
 - Keep screening short — three questions at most before getting to the point.
 
+## Customer context and prompt caching
+
+Per-call data (the customer's name, their order, anything from the batch
+record) reaches the agent as **customer context**. Discover what a team
+supplies with `GET /client/ai-agent-teams/{id}/customer-context-variables`,
+and for an outbound campaign remember the chain: the outbound option defines
+the columns, the batch record supplies the values, and the prompt refers to
+them by those names.
+
+Reference a field as `{{customerContext.field_name}}`. There is also a set of
+built-in time variables — `{{now}}`, `{{today}}`, `{{tomorrow}}`,
+`{{dayOfWeek}}`, `{{hour}}` and similar.
+
+### The prompt body must be identical for every customer
+
+The platform caches the agent's prompt across calls, and the cache only holds
+when the body is byte-for-byte the same every time. Everything authored here —
+identity, task, knowledge, flow — is the cached part. The customer's real
+values are supplied separately, at the very end of the assembled prompt.
+
+This has one consequence that changes how prompts are written:
+
+**`{{customerContext.field}}` inside the prompt body renders as a literal
+`[field]` marker, not the value.** It is a label telling the model where to
+look, and the real value arrives in the dynamic tail. So write lines that read
+correctly as a reference, not as a substitution:
+
+- ✅ `เรียกลูกค้าด้วยชื่อใน [customer_name]`
+- ✅ `ยอดค้างชำระของลูกค้าอยู่ใน [outstanding_amount] ห้ามเปลี่ยนตัวเลขเอง`
+- ❌ `สวัสดีค่ะ คุณ{{customerContext.customer_name}}` — reads as
+  `สวัสดีค่ะ คุณ[customer_name]`, which is not a sentence
+
+Rules that follow from this:
+
+- **Never bake a per-call value into the body.** No customer names, amounts,
+  dates, or ids written as literals, and nothing assembled per campaign run.
+  One agent body serves every customer.
+- **Conditions still see real values.** `{% if %}` and `{% for %}` expressions
+  evaluate against the actual data, so branching on customer context works
+  normally — only `{{ }}` interpolations become markers.
+- **Do not force a value inline.** Assigning a context field to a variable and
+  printing it will substitute the real value into the body, which makes the
+  prompt different for every customer and loses the cache for that call. Use it
+  only if a value genuinely must be spoken verbatim and a marker cannot work,
+  and say so when you do.
+- **Keep the body free of anything volatile** — timestamps, per-call ids,
+  generated text. Volatility in the body costs the cache on every call.
+- **Verify every referenced variable exists.** A name the option does not
+  supply leaves a marker the model cannot resolve. Check the team's context
+  variables and the option's fields before publishing.
+
+Any prompt this skill produces must follow these rules. When editing an
+existing agent, keep its configured prompt engine version as it is; when
+creating a new one, leave the default.
+
 ## Voice and TTS
 
 - Use `<say-as type="thai_money">65</say-as>` for currency (do not add บาท
@@ -139,7 +194,9 @@ Rules that keep a flow working:
 3. Identity states gender, and the particles in `examples` match it.
 4. Prices, dates, and policies in the prompt match the source of truth.
 5. The first state forbids re-greeting.
-6. The disposition outcome list and the outcome metadata schema agree with the
+6. No per-call value is written into the prompt body, and every
+   `{{customerContext.*}}` name is one the team actually supplies.
+7. The disposition outcome list and the outcome metadata schema agree with the
    flow — every outcome the flow can produce is a label, and vice versa.
 
 Publish only after the user confirms. A published revision changes how the
