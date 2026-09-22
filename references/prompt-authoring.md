@@ -109,35 +109,36 @@ when the body is byte-for-byte the same every time. Everything authored here —
 identity, task, knowledge, flow — is the cached part. The customer's real
 values are supplied separately, at the very end of the assembled prompt.
 
-This has one consequence that changes how prompts are written:
+**Always write `{{customerContext.field_name}}` in the prompt.** That is the
+authoring syntax, everywhere a per-call value is needed:
 
-**`{{customerContext.field}}` inside the prompt body renders as a literal
-`[field]` marker, not the value.** It is a label telling the model where to
-look, and the real value arrives in the dynamic tail. So write lines that read
-correctly as a reference, not as a substitution:
+- ✅ `สวัสดีค่ะ คุณ{{customerContext.customer_name}}`
+- ✅ `แจ้งยอดค้างชำระ {{customerContext.outstanding_amount}} ห้ามคำนวณเอง`
+- ❌ `สวัสดีค่ะ คุณสมชาย` — a real value written into the prompt
+- ❌ `สวัสดีค่ะ คุณ[customer_name]` — a bracket marker written by hand
 
-- ✅ `เรียกลูกค้าด้วยชื่อใน [customer_name]`
-- ✅ `ยอดค้างชำระของลูกค้าอยู่ใน [outstanding_amount] ห้ามเปลี่ยนตัวเลขเอง`
-- ❌ `สวัสดีค่ะ คุณ{{customerContext.customer_name}}` — reads as
-  `สวัสดีค่ะ คุณ[customer_name]`, which is not a sentence
+The platform keeps the body cacheable on its own; that is its job, not the
+author's. Never hand-write a bracket marker, and never paste a customer's
+actual value in place of the reference.
 
 Rules that follow from this:
 
 - **Never bake a per-call value into the body.** No customer names, amounts,
   dates, or ids written as literals, and nothing assembled per campaign run.
-  One agent body serves every customer.
+  One agent body serves every customer — the only way a per-call value belongs
+  in the prompt is as a `{{customerContext.*}}` reference.
 - **Conditions still see real values.** `{% if %}` and `{% for %}` expressions
   evaluate against the actual data, so branching on customer context works
-  normally — only `{{ }}` interpolations become markers.
+  normally, and the `{{customerContext.*}}` references stay as written.
 - **Do not force a value inline.** Assigning a context field to a variable and
   printing it will substitute the real value into the body, which makes the
   prompt different for every customer and loses the cache for that call. Use it
-  only if a value genuinely must be spoken verbatim and a marker cannot work,
-  and say so when you do.
+  only if a value genuinely must be spoken verbatim and a plain
+  `{{customerContext.*}}` reference cannot work, and say so when you do.
 - **Keep the body free of anything volatile** — timestamps, per-call ids,
   generated text. Volatility in the body costs the cache on every call.
 - **Verify every referenced variable exists.** A name the option does not
-  supply leaves a marker the model cannot resolve. Check the team's context
+  supply leaves a reference the model cannot resolve. Check the team's context
   variables and the option's fields before publishing.
 
 Any prompt this skill produces must follow these rules. When editing an
@@ -149,7 +150,7 @@ creating a new one, leave the default.
 Prompt text is rendered through a Jinja2-compatible template engine, so a
 prompt can branch and loop on customer context instead of stating every case
 in prose. Tags (`{% ... %}`) are evaluated against the **real** customer data,
-even though `{{ ... }}` interpolations of customer fields become markers.
+and `{{customerContext.*}}` references inside them work as usual.
 
 Common uses:
 
@@ -163,7 +164,7 @@ Common uses:
 
 ```jinja
 {% if customerContext.outstanding_amount %}
-แจ้งยอดค้างชำระจาก [outstanding_amount] ห้ามคำนวณหรือปัดเศษเอง
+แจ้งยอดค้างชำระ {{customerContext.outstanding_amount}} ห้ามคำนวณหรือปัดเศษเอง
 {% endif %}
 ```
 
@@ -189,15 +190,15 @@ so `{% if hour < 12 %}` works.
   different prompt body, and only identical bodies share a cache entry. A
   handful of coarse branches is fine; a prompt that branches on many fields
   fragments the cache into near-unique bodies. Prefer one conditional over
-  three, and prefer a marker the model reads over a branch that rewrites the
-  text.
+  three, and prefer a plain `{{customerContext.*}}` reference over a branch
+  that rewrites the text.
 - **Branch on shape, not on values.** Use conditionals for cases that need
   genuinely different instructions — existing vs new customer, has an
-  outstanding balance vs not. Do not use them to inline a value; that is what
-  markers are for.
+  outstanding balance vs not. Do not use them to inline a value; write
+  `{{customerContext.field}}` for that.
 - **Guard optional fields.** A field the option does not always supply should
   be wrapped in `{% if %}` so the surrounding sentence disappears when it is
-  missing, rather than leaving a dangling marker.
+  missing, rather than leaving a reference to a value that is not there.
 - **Never put a tag inside a spoken example.** `examples` are verbatim scripts;
   a template tag that survives into one gets read aloud. Put the conditional
   around the instruction instead.
