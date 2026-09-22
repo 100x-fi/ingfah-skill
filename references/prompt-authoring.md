@@ -82,12 +82,63 @@ Rules that keep a flow working:
   like. Give one or two per state, not a paragraph.
 - `instructions` carry the logic and may be long. One state, one job.
 - Every flow ends in a terminal state with no transitions and
-  `end_call_keyword: true`. Every path must be able to reach it.
+  `end_call_keyword: true`. Every path must be able to reach it. See **Ending
+  the call** below — the flag alone does not hang up.
 - Cover the unhappy paths as real states, not afterthoughts: not a good time,
   wrong number, not the decision maker, do-not-call, and a graceful close.
 - Ask **one** question per turn. A state that asks three at once gets one
   answer back.
 - Keep screening short — three questions at most before getting to the point.
+
+## Ending the call
+
+A call hangs up when the agent **says a closing phrase the platform
+recognises**. Setting `end_call_keyword: true` on a state enables that
+detection and tells the agent to close politely, but the hang-up is triggered
+by the spoken line, not by the flag on its own. A terminal state with the flag
+set and a closing line the platform does not recognise leaves the call open
+with neither side speaking.
+
+So a terminal state needs both:
+
+1. `"guidelines": {"end_call_keyword": true}` on the state, and
+2. at least one `examples` entry ending in a recognised closing phrase.
+
+### Recognised closing phrases
+
+```
+ขออนุญาตวางสาย
+ขอบคุณที่สละเวลา
+ขอให้คุณลูกค้ามีวันที่ดี
+ขอให้เป็นวันที่ดี
+กราบสวัสดีค่ะ
+สวัสดีค่ะ 😊
+สวัสดีครับ 😊
+```
+
+`ขออนุญาตวางสาย` is the safe default and the one to use for the answering
+machine case, where the agent must stop immediately without saying anything
+else.
+
+### Rules
+
+- **Give every terminal state a recognised closing line** in its `examples`,
+  and instruct it to end on that line. A polite sign-off the platform does not
+  recognise does not end the call.
+- **Match the particle to the agent's gender.** A female agent closes with
+  `สวัสดีค่ะ 😊`, a male agent with `สวัสดีครับ 😊`. Mixing them is both wrong
+  for TTS and a missed trigger.
+- **The two emoji phrases are the one place an emoji is allowed.** The general
+  rule bans symbols in spoken output; these are the exception, and the emoji is
+  part of the phrase — dropping it loses the match.
+- **Never use a closing phrase mid-call.** A phrase like `ขอบคุณที่สละเวลา`
+  used as a mid-conversation pleasantry will hang up on the customer. Instruct
+  non-terminal states not to thank the customer for their time until the call
+  is genuinely over.
+- **Do not set the flag on a state the call passes through.** Enable it only on
+  states where hanging up is the intended outcome.
+- **Answering machine detection closes with `ขออนุญาตวางสาย` and nothing
+  else** — no message, no continuation.
 
 ## Customer context and prompt caching
 
@@ -207,9 +258,40 @@ so `{% if hour < 12 %}` works.
 
 ## Voice and TTS
 
-- Use `<say-as type="thai_money">65</say-as>` for currency (do not add บาท
-  after it), `thai_number_as_quantity` for counts, `thai_license_plate` for
-  plates.
+### `<say-as>` pronunciation tags
+
+Wrap numbers, times, and codes so they are spoken correctly instead of being
+guessed at. Syntax: `<say-as type="...">value</say-as>`. Full reference:
+https://docs.ingfah.ai/guides/ai-agent/say-as-pronunciation/
+
+| Type | Use for | Example → spoken |
+|---|---|---|
+| `thai_money` | baht amounts, including satang | `500` → ห้าร้อยบาท |
+| `thai_number_as_quantity` | counts and quantities | `1250` → หนึ่งพัน-สองร้อย-ห้าสิบ |
+| `thai_number_as_digit` | codes, reference and phone numbers | `5566` → ห้า-ห้า-หก-หก |
+| `thai_license_plate` | vehicle registrations | `1รส8495` → หนึ่ง-รอเรือสอเสือ-แปดสี่เก้าห้า |
+| `thai_time_official` | formal time (นาฬิกา / นาที) | `10:30` → สิบนาฬิกาสามสิบนาที |
+| `thai_time_friendly` | conversational time | `10:30` → สิบโมงครึ่ง |
+
+Rules:
+
+- **`thai_money` already says บาท** (and สตางค์ for decimals). Adding บาท after
+  the tag makes the agent say it twice.
+- **Pick digit vs quantity deliberately.** An order count is
+  `thai_number_as_quantity`; an account number, OTP-style code, or phone number
+  is `thai_number_as_digit`. Reading a reference number as a quantity is one of
+  the most common and most confusing TTS errors.
+- **Pick the time style to match the register.** A formal confirmation uses
+  `thai_time_official`; a friendly sales or survey call uses
+  `thai_time_friendly`.
+- Tag the value only — no unit, no currency symbol, and no surrounding
+  quotation marks.
+- Tags belong in `examples` and in `instructions` that dictate wording. A value
+  arriving from customer context still needs the tag around the reference, e.g.
+  `<say-as type="thai_money">{{customerContext.outstanding_amount}}</say-as>`.
+
+### Everything else spoken
+
 - Spell out phone numbers and email addresses; drop `https://` and URL syntax.
 - No markdown, bullets, quotation marks, emoji, or symbols in anything the
   agent says — it is read aloud. Quotation marks in particular get vocalised.
@@ -229,7 +311,9 @@ so `{% if hour < 12 %}` works.
 
 - **Answering machine detection, highest priority.** On voicemail greetings,
   beep cues, carrier announcements, or long monologue speech with no pause:
-  say a short sign-off line and stop. Do not leave a message.
+  say exactly `ขออนุญาตวางสาย` and stop. Do not leave a message, and do not
+  say anything else — that phrase is what ends the call (see **Ending the
+  call**).
 - **Knowledge boundaries.** Answer only from what is written in the prompt.
   Never infer, extrapolate, or fill a gap with general knowledge. If it is not
   in the prompt, say so and offer a follow-up. Implication is not permission:
@@ -251,7 +335,9 @@ so `{% if hour < 12 %}` works.
 ## Before publishing
 
 1. Every `next_step` resolves to a real state id.
-2. A terminal state exists and every path reaches it.
+2. A terminal state exists, every path reaches it, it has
+   `end_call_keyword: true`, and its `examples` end on a recognised closing
+   phrase with the right gender particle.
 3. Identity states gender, and the particles in `examples` match it.
 4. Prices, dates, and policies in the prompt match the source of truth.
 5. The first state forbids re-greeting.
