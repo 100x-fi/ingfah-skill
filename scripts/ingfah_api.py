@@ -84,11 +84,11 @@ def request(method: str, path: str, body: Any = None, *, confirm: bool = False, 
     key = _read_key()
     url = f"{_base_url()}{path}{query}"
     data = None
-    # The public contract documents the lowercase spelling. Although HTTP header
-    # names are technically case-insensitive, preserve this exact spelling for
-    # compatibility with the deployed gateway.
+    # HTTP header names are case-insensitive; the gateway accepts either
+    # spelling. User-Agent is required -- Cloudflare rejects requests without
+    # one with a 403 error-1010 before they reach the API.
     headers = {
-        "x-api-key": key,
+        "X-Api-Key": key,
         "Accept": "application/json",
         "User-Agent": "ingfah-skill/1.0",
     }
@@ -123,6 +123,13 @@ def _decode_body(raw: bytes, content_type: str) -> Any:
 def _format_api_error(status: int, body: Any) -> str:
     if isinstance(body, dict):
         error = body.get("error") or body.get("message") or "request failed"
+        # error_detail carries the field-level reason (e.g. "time_slots is
+        # required"). Without it every validation failure reads "bad request".
+        detail = body.get("error_detail")
+        if isinstance(detail, str) and detail.startswith(f"{error}: "):
+            detail = detail[len(error) + 2 :]
+        if detail and detail != error:
+            return f"Ingfah API returned HTTP {status}: {error}: {detail}"
         return f"Ingfah API returned HTTP {status}: {error}"
     return f"Ingfah API returned HTTP {status}"
 

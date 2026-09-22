@@ -118,5 +118,20 @@ class IngfahApiTests(unittest.TestCase):
 
 
 
+    def test_error_detail_is_surfaced(self):
+        message = ingfah_api._format_api_error(
+            400, {"status": "error", "error": "bad request",
+                  "error_detail": "bad request: schedule 0 time_slots is required"}
+        )
+        self.assertEqual(
+            message,
+            "Ingfah API returned HTTP 400: bad request: schedule 0 time_slots is required",
+        )
+
+    def test_error_detail_absent_falls_back_to_error(self):
+        message = ingfah_api._format_api_error(404, {"error": "resource not found"})
+        self.assertEqual(message, "Ingfah API returned HTTP 404: resource not found")
+
+
 if __name__ == "__main__":
     unittest.main()
