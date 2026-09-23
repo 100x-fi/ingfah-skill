@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from typing import Any
 
 
+__version__ = "1.0.0"
+
 DEFAULT_BASE_URL = "https://api.ingfah.ai"
 API_KEY_ENV = "INGFAH_API_KEY"
 BASE_URL_ENV = "INGFAH_API_BASE_URL"
@@ -112,7 +114,7 @@ def request(method: str, path: str, body: Any = None, *, confirm: bool = False, 
     headers = {
         "X-Api-Key": key,
         "Accept": "application/json",
-        "User-Agent": "ingfah-skill/1.0",
+        "User-Agent": f"ingfah-skill/{__version__}",
     }
     if body is not None:
         data = json.dumps(body).encode("utf-8")

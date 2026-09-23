@@ -1,23 +1,55 @@
-# ingfah-skill
+# Ingfah agent skill
 
-An agent skill for working with the [Ingfah](https://ingfah.ai) client API using
-a client API key. It lets a coding agent inspect and manage Ingfah products, AI
-agents and their revisions, chat sessions, outbound batches, and post-call
-disposition outcomes and outcome metadata.
+[![test](https://github.com/100x-fi/ingfah-skill/actions/workflows/test.yml/badge.svg)](https://github.com/100x-fi/ingfah-skill/actions/workflows/test.yml)
+[![skills.sh](https://img.shields.io/badge/skills.sh-ingfah-black)](https://skills.sh/100x-fi/ingfah-skill/ingfah)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+An agent skill, named `ingfah`, for working with the [Ingfah](https://ingfah.ai)
+client API using a client API key. It lets a coding agent such as Claude Code
+inspect and manage AI Agent Teams, AI agents and their revisions, Tools, calls
+and chats, outbound batches, post-call results, and Chat Automation — in
+English or Thai, using the dashboard's own words.
 
 The skill restricts the agent to a documented allowlist of client API routes,
 requires explicit confirmation before anything is created, changed, or deleted,
 and keeps the API key out of files, logs, and command output.
 
+## What it looks like
+
+An illustrative exchange:
+
+> **You:** หยุด Batch 7 ไว้ก่อน
+>
+> **Agent:** Batch 7 "ลูกค้าค้างชำระ ก.ย." is **กำลังดำเนินการ** — 412 of 1,000
+> records called. Pausing stops calls that have not started; a call already in
+> progress runs to its end. Pause it?
+>
+> **You:** ok
+>
+> **Agent:** Paused. It is now under the **หยุดชั่วคราว** tab on สายออก →
+> รายการ Batch. Say "resume batch 7" to continue.
+
+Every write goes through the same pattern: read the current state, show what
+will change, wait for a yes, send it, then read it back.
+
 ## What's in here
 
 | Path | Purpose |
 |---|---|
-| `SKILL.md` | The skill itself: routes, scopes, and the rules the agent follows |
+| `SKILL.md` | The skill itself: routes, scopes, naming, and the rules that apply to every task |
 | `scripts/ingfah_api.py` | Dependency-free request script; enforces the allowlist and the confirmation gate |
+| `references/agents-and-teams.md` | Creating and editing agents, revisions, and AI Agent Teams |
 | `references/prompt-authoring.md` | How to write an agent's identity, task, and conversation flow |
+| `references/outbound-batches.md` | Creating and controlling outbound batches |
+| `references/tools.md` | Phone tools and plugin functions |
+| `references/postprocessors.md` | The disposition and outcome metadata API |
 | `references/outcome-design.md` | How to design disposition outcomes and an outcome metadata schema |
+| `references/automations.md` | Chat Automation: webhooks and do-not-contact |
+| `references/dashboard-terms.md` | Field-level English and Thai dashboard names |
 | `tests/` | Unit tests for the script |
+
+The agent reads `SKILL.md` every time the skill is used, and opens a reference
+file only when the task needs it.
 
 ## Requirements
 
@@ -50,7 +82,7 @@ than copying means `git pull` updates the installed skill.
 ```bash
 git clone git@github.com:100x-fi/ingfah-skill.git ~/src/ingfah-skill
 mkdir -p ~/.claude/skills
-ln -s ~/src/ingfah-skill ~/.claude/skills/ingfah-skill
+ln -s ~/src/ingfah-skill ~/.claude/skills/ingfah
 ```
 
 ## Providing the API key
@@ -74,7 +106,7 @@ HTTPS.
 
 ```bash
 cd ~/src/ingfah-skill
-python3 -m unittest tests.test_ingfah_api          # 16 tests, no network
+python3 -m unittest tests.test_ingfah_api          # 17 tests, no network
 INGFAH_API_KEY='sk-ing-...' python3 scripts/ingfah_api.py GET /client/products
 ```
 
@@ -99,7 +131,7 @@ read-only request.
 Update by hand:
 
 ```bash
-npx skills update ingfah-skill
+npx skills update ingfah
 ```
 
 Or keep it current automatically with a Claude Code `SessionStart` hook in
@@ -126,3 +158,14 @@ session.
 
 For a git clone, use `git -C ~/src/ingfah-skill pull --ff-only -q || true` as
 the hook command instead.
+
+## Contributing
+
+Issues and pull requests are welcome. Run the tests before opening a pull
+request; CI runs them on Python 3.9 and 3.13. Report security problems
+privately — see [SECURITY.md](SECURITY.md). Changes are recorded in
+[CHANGELOG.md](CHANGELOG.md).
+
+## License
+
+[MIT](LICENSE) © 100X

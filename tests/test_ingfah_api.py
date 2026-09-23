@@ -46,6 +46,9 @@ class IngfahApiTests(unittest.TestCase):
         self.assertEqual(result.body, {"status": "success", "data": []})
         self.assertEqual(captured["request"].get_header("X-api-key"), "secret-key")
         self.assertEqual(captured["request"].full_url, "https://api.ingfah.ai/client/products")
+        self.assertEqual(
+            captured["request"].get_header("User-agent"), f"ingfah-skill/{ingfah_api.__version__}"
+        )
 
     def test_rejects_route_outside_skill_allowlist(self):
         with patch.dict(os.environ, {"INGFAH_API_KEY": "secret-key"}, clear=False):
