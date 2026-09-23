@@ -1,6 +1,6 @@
 ---
 name: ingfah-skill
-description: Interact with the Ingfah client platform through client API-key authenticated APIs. Use this skill when the user asks to inspect or manage Ingfah products, AI agents, chat sessions, or outbound batches. Do not use backoffice APIs or JWT-only client APIs.
+description: Interact with the Ingfah client platform through client API-key authenticated APIs. Use this skill when the user asks to inspect or manage Ingfah products, AI agents, chat sessions, tools, or outbound batches — including when they use the dashboard's own words in English or Thai, such as AI Agent Team / ทีม AI Agent, batch / Batch โทรออก, calls / สายทั้งหมด, chats / แชท, templates / เทมเพลตข้อมูลลูกค้า, tools / Tool, or post-call results / ผลลัพธ์หลังวางสาย. Do not use backoffice APIs or JWT-only client APIs.
 ---
 
 # Ingfah client API
@@ -21,6 +21,87 @@ Two reference files carry the detail for authoring work:
   or editing a postprocessor.
 
 Use `scripts/ingfah_api.py` for every request. It is dependency-free and enforces the route allowlist and the mutation confirmation rule. Do not substitute `curl`, `requests`, or an ad-hoc script, even if asked to for speed: doing so bypasses both guardrails, and requests without the script's `User-Agent` header are rejected by Cloudflare with a 403 error-1010.
+
+## Naming: what the user calls things
+
+The API's names and the dashboard's names differ, and most users speak in
+dashboard words — often Thai. Translate their words to the API entity below,
+and **answer in their words**, not the API's: say "ทีม AI Agent" or "AI Agent
+Team", not "product". When a term is ambiguous, name both ("the AI Agent Team
+— `product` in the API") once, then stay in their language.
+
+| API entity | Dashboard (EN) | Dashboard (TH) |
+|---|---|---|
+| `product` | AI Agent Team | ทีม AI Agent |
+| agent | AI Agent | AI Agent |
+| revision (unpublished) | Draft / Has Draft | แบบร่าง / มีแบบร่าง |
+| revision (published) | Published / Currently Published | เผยแพร่ / เผยแพร่อยู่ |
+| publish a revision | Publish | เผยแพร่ |
+| chat session (voice) | Call — All Calls | สาย — สายทั้งหมด |
+| chat session (text) | Chat — Chats | แชท |
+| transcript / messages | Conversation | การสนทนา |
+| outbound batch | Batch — Batch Listing | Batch — รายการ Batch |
+| outbound option | Template — Manage Templates | เทมเพลตข้อมูลลูกค้า — จัดการเทมเพลต |
+| plugin function | Tool | Tool |
+| phone tool | Tool (Calling category) | Tool (หมวดการโทร) |
+| `direction: inbound` | Inbound | สายเข้า / รับสาย |
+| `direction: outbound` | Outbound | สายออก / โทรออก |
+| `channel_type: audio` | Voice | เสียง |
+| `channel_type: text` | Text | ข้อความ |
+| `visibility` | Private / Public | ส่วนตัว / สาธารณะ |
+| `starting_agent_id` | Start (starting agent) | จุดเริ่มต้น |
+| SIP number | Phone Numbers | เบอร์โทรศัพท์ |
+| knowledge base | Knowledge | คลังความรู้ |
+| API key | API Keys | จัดการ API Keys |
+
+### Postprocessors
+
+The dashboard does not use the word "postprocessor". All four live under
+**Set post-call results / ตั้งค่าผลลัพธ์หลังวางสาย** on the team page.
+
+| API | Dashboard (EN) | Dashboard (TH) |
+|---|---|---|
+| `type: disposition` | Disposition Outcome / Conversation Outcome | ผลลัพธ์แบบสถานะ / ผลลัพธ์หลังจบการสนทนา |
+| `disposition_outcomes[].outcome` | Outcome name | ชื่อผลลัพธ์ |
+| `disposition_outcomes[].prompt` | Outcome classification criteria | เกณฑ์การจำแนกผลลัพธ์ |
+| `type: outcome_metadata` | Outcome Metadata (JSON) | ผลลัพธ์แบบ metadata (JSON) |
+| `json_schema.name` | Schema name / the data set | ชื่อชุดข้อมูล |
+| `instruction` | Instruction | คำสั่ง |
+| `is_enabled` | On / Off | เปิด / ปิด |
+| `type: summary` | Conversation summary (Auto) | สรุปบทสนทนา (อัตโนมัติ) |
+| `disposition_outcome` on a record | Result | ผลลัพธ์ |
+| `outcome_metadata` on a record | Metadata | Metadata |
+
+### Agent prompt fields
+
+| API field | Dashboard (EN) | Dashboard (TH) |
+|---|---|---|
+| `name` | AI Agent Name — what it calls itself on the call | ชื่อ AI Agent |
+| `vocal_name` | Agent vocal name — what staff and other agents call it | Agent vocal name |
+| `greeting_message` | Initial Greeting Message | ข้อความทักทายเริ่มต้น |
+| `ai_instruction_identity` | Identity | ตัวตน |
+| `ai_instruction_task` | Task | เป้าหมาย/หน้าที่ |
+| `ai_instruction_flow` | Agent Flow | Agent Flow |
+| `voice_id` | Voice | เสียง |
+
+### Tool fields
+
+| API field | Dashboard (EN) | Dashboard (TH) |
+|---|---|---|
+| `signature` | Signature | Signature |
+| `description` | Description for AI Agent | คำอธิบายสำหรับ AI Agent |
+| `parameters` | Function Parameters | Function Parameters |
+| `integration` | Integration Type | ประเภท Integration |
+| `integration_parameters` | Integration Parameters | Integration Parameters |
+
+### Batch and record status words
+
+Batch tabs: In Progress / กำลังดำเนินการ, Paused / หยุดชั่วคราว,
+Scheduled / รอดำเนินการ, Completed / สิ้นสุด.
+
+Record statuses: Called / โทรแล้ว, Pending / รอโทร, Calling / กำลังสนทนา,
+Missed / ไม่รับสาย, Busy / สายไม่ว่าง, Case Not Closed / ปิดเคสไม่ได้,
+Error / ผิดพลาด, Do Not Contact / ไม่ติดต่อ.
 
 ## Authentication
 
@@ -283,8 +364,8 @@ Rules:
 
 ## AI team (product) handling
 
-A product is an AI team. Beyond creation it can be read, updated, made
-public or private, and deleted.
+A `product` is what the dashboard calls an **AI Agent Team / ทีม AI Agent**.
+Beyond creation it can be read, updated, made public or private, and deleted.
 
 - `PUT /client/products/{id}` takes `name`, `description`,
   `starting_agent_id`, `channel_type`, and `transferabilities`. `channel_type`
