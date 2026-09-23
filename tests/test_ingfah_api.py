@@ -184,5 +184,46 @@ class IngfahApiTests(unittest.TestCase):
         self.assertFalse(ingfah_api._is_allowed("POST", "/client/products/227/automations/5"))
 
 
+    def test_chat_session_recording_routes_are_allowed(self):
+        for path in (
+            "/client/chat-sessions/abc-123/record",
+            "/client/chat-sessions/abc-123/record/download",
+            "/client/chat-sessions/abc-123/record/checksum",
+        ):
+            self.assertTrue(ingfah_api._is_allowed("GET", path), path)
+        self.assertFalse(ingfah_api._is_allowed("GET", "/client/chat-sessions/abc-123/record/foo"))
+        self.assertFalse(ingfah_api._is_allowed("DELETE", "/client/chat-sessions/abc-123/record"))
+        # A test call's recording is dashboard-login only.
+        self.assertFalse(ingfah_api._is_allowed("GET", "/client/agents/bot/chat-session-tests/abc-123/record"))
+
+    def test_binary_download_is_kept_as_bytes(self):
+        audio = b"OggS\x00\x02\xff\xfe"
+        self.assertEqual(ingfah_api._decode_body(audio, "audio/ogg"), audio)
+        self.assertEqual(ingfah_api._decode_body(b"a,b\n1,2\n", "text/csv; charset=utf-8"), "a,b\n1,2\n")
+
+    def test_cli_refuses_to_print_binary_response(self):
+        response = ingfah_api.ApiResponse(200, b"OggS\xff", "audio/ogg")
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with patch("scripts.ingfah_api.request", return_value=response), redirect_stdout(stdout), redirect_stderr(stderr):
+            code = ingfah_api.main(["GET", "/client/chat-sessions/abc/record/download"])
+        self.assertEqual(code, 1)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertIn("--output", stderr.getvalue())
+
+    def test_cli_output_saves_exact_bytes_and_will_not_overwrite(self):
+        audio = b"OggS\x00\xff\xfe"
+        response = ingfah_api.ApiResponse(200, audio, "audio/ogg")
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "call.ogg")
+            args = ["GET", "/client/chat-sessions/abc/record/download", "--output", path]
+            with patch("scripts.ingfah_api.request", return_value=response) as request, redirect_stdout(io.StringIO()):
+                self.assertEqual(ingfah_api.main(args), 0)
+                with open(path, "rb") as handle:
+                    self.assertEqual(handle.read(), audio)
+                with redirect_stderr(io.StringIO()) as stderr:
+                    self.assertEqual(ingfah_api.main(args), 1)
+                self.assertIn("already exists", stderr.getvalue())
+                self.assertEqual(request.call_count, 1)
+
 if __name__ == "__main__":
     unittest.main()

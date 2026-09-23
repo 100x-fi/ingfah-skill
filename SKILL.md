@@ -140,9 +140,10 @@ python3 scripts/ingfah_api.py GET /client/products
 python3 scripts/ingfah_api.py GET /client/outbound/batches/7/records --query '?per_page=20&status=called'
 python3 scripts/ingfah_api.py --confirm POST /client/outbound/batches --json request.json
 python3 scripts/ingfah_api.py --confirm POST /client/outbound/batches/7/pause
+python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download --output call.ogg
 ```
 
-`--json` accepts either a path to a JSON file or an inline JSON document. Run the script from the skill directory, or give its absolute path.
+`--json` accepts either a path to a JSON file or an inline JSON document. `--output` saves the response body to a new file instead of printing it; binary responses are refused without it. Run the script from the skill directory, or give its absolute path.
 
 ## Client API-key scopes and routes
 
@@ -260,6 +261,24 @@ without opening one.
 ## Response handling
 
 Return concise, structured summaries. Preserve identifiers, statuses, timestamps, and relevant error details, but remove credentials and unrelated personal or sensitive data. For downloads, save or present the result only when the user explicitly requests it.
+
+### Call recordings
+
+A voice call's recording is read three ways, all under `chat_sessions:read`:
+
+- `GET /client/chat-sessions/{uuid}/record` returns a link to the audio,
+  valid for 15 minutes, with its SHA-256 checksum. Anyone holding the link can
+  play the call until it expires, so treat it like personal data: do not paste
+  it into shared places, and give it only to the user who asked.
+- `GET /client/chat-sessions/{uuid}/record/download` returns the Ogg file
+  itself. Save it with `--output` only when the user asks for the file.
+- `GET /client/chat-sessions/{uuid}/record/checksum` returns only the
+  checksum, for checking a download.
+
+Opening a recording through the link or the download route is written to the
+account's activity log under the API key. A `404` with `no audio recording
+available` means no recording is stored for that session, as with any
+text chat.
 
 Recordings, transcripts, and batch data are deleted automatically once they
 pass the account's data-retention period, set by an Owner under การตั้งค่า →

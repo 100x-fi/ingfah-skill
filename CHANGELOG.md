@@ -4,6 +4,17 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.0.1] — 2026-09-23
+
+### Fixed
+
+- The script now allows the three call recording routes `SKILL.md` already
+  listed: `GET /client/chat-sessions/{uuid}/record`, `/record/download`, and
+  `/record/checksum`. They were refused as outside the allowlist.
+- Binary responses such as the Ogg recording are no longer decoded as text,
+  which corrupted them. The script refuses to print one and saves it with the
+  new `--output PATH` option, which never overwrites an existing file.
+
 ## [1.0.0] — 2026-09-23
 
 First versioned release.
@@ -19,4 +30,5 @@ First versioned release.
   moved from `SKILL.md` into `references/`, so less loads on every use.
 - Install and update through the `skills` CLI; MIT license.
 
+[1.0.1]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.0.1
 [1.0.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.0.0

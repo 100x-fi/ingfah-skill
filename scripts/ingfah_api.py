@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 DEFAULT_BASE_URL = "https://api.ingfah.ai"
 API_KEY_ENV = "INGFAH_API_KEY"
@@ -52,6 +52,7 @@ ROUTE_PATTERNS = (
     ("POST", re.compile(r"^/client/agents/[^/]+/revisions/[^/]+/publish$")),
     ("DELETE", re.compile(r"^/client/agents/[^/]+/revisions/[^/]+$")),
     ("GET", re.compile(r"^/client/chat-sessions(?:/[^/]+)?$")),
+    ("GET", re.compile(r"^/client/chat-sessions/[^/]+/record(?:/(download|checksum))?$")),
     ("GET", re.compile(r"^/client/chat-sessions-list(?:/csv)?$")),
     ("GET", re.compile(r"^/client/agents/[^/]+/chat-session-tests(?:/[^/]+)?$")),
     ("GET", re.compile(r"^/client/outbound/options(?:/[^/]+)?$")),
@@ -141,7 +142,16 @@ def _decode_body(raw: bytes, content_type: str) -> Any:
             return json.loads(raw.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
             return {"raw_bytes": len(raw)}
-    return raw.decode("utf-8", errors="replace")
+    if _is_text(content_type):
+        return raw.decode("utf-8", errors="replace")
+    # Audio and other binary downloads stay as bytes; decoding them as text
+    # would corrupt the file.
+    return raw
+
+
+def _is_text(content_type: str) -> bool:
+    media_type = content_type.split(";")[0].strip().lower()
+    return media_type.startswith("text/") or media_type in {"application/csv", "application/xml"}
 
 
 def _format_api_error(status: int, body: Any) -> str:
@@ -173,6 +183,21 @@ def _load_json_body(value: str) -> Any:
         raise ClientError(f"invalid JSON body: {error.msg}") from None
 
 
+def _save_body(body: Any, path: str) -> int:
+    if isinstance(body, (dict, list)):
+        data = json.dumps(body, ensure_ascii=False, indent=2).encode("utf-8")
+    elif isinstance(body, bytes):
+        data = body
+    else:
+        data = str(body).encode("utf-8")
+    try:
+        with open(path, "xb") as handle:
+            handle.write(data)
+    except OSError as error:
+        raise ClientError(f"could not write output file: {error.strerror}") from None
+    return len(data)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Call an allowlisted Ingfah client API route")
     parser.add_argument("method", choices=("GET", "POST", "PUT", "PATCH", "DELETE"))
@@ -180,15 +205,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--query", default="", help="URL-encoded query string, including the leading ?")
     parser.add_argument("--json", dest="json_body", help="JSON request body, inline or a path to a .json file")
     parser.add_argument("--confirm", action="store_true", help="confirm a state-changing request")
+    parser.add_argument("--output", help="save the response body to this new file instead of printing it")
     args = parser.parse_args(argv)
 
     try:
+        if args.output and os.path.exists(args.output):
+            raise ClientError(f"output file already exists: {args.output}")
         body = _load_json_body(args.json_body) if args.json_body else None
         response = request(args.method, args.path, body, confirm=args.confirm, query=args.query)
-        if isinstance(response.body, (dict, list)):
+        if args.output:
+            size = _save_body(response.body, args.output)
+            print(f"saved {size} bytes ({response.content_type}) to {args.output}")
+        elif isinstance(response.body, (dict, list)):
             print(json.dumps(response.body, ensure_ascii=False, indent=2))
         elif isinstance(response.body, bytes):
-            sys.stdout.buffer.write(response.body)
+            raise ClientError(
+                f"binary response ({response.content_type}, {len(response.body)} bytes); "
+                "pass --output PATH to save it"
+            )
         else:
             print(response.body, end="")
         return 0

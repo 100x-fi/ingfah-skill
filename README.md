@@ -106,7 +106,7 @@ HTTPS.
 
 ```bash
 cd ~/src/ingfah-skill
-python3 -m unittest tests.test_ingfah_api          # 17 tests, no network
+python3 -m unittest tests.test_ingfah_api          # 21 tests, no network
 INGFAH_API_KEY='sk-ing-...' python3 scripts/ingfah_api.py GET /client/products
 ```
 
