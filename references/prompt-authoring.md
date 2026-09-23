@@ -332,6 +332,102 @@ Rules:
 - **No fabrication about the customer.** Do not infer their gender, role, or
   background, and do not alter dates or times they gave.
 
+## Patterns from tuning real calls
+
+These come from Ingfah's own guides and fix failures that recur across
+campaigns. Markdown headings inside the prompt are fine and help the model
+find sections; the ban on markdown applies only to what the agent says.
+
+### Mishearing and silence
+
+- **Do not trust a refusal as the first reply to the greeting.** Speech-to-text
+  often hears คุยได้ค่ะ as ไม่ได้ค่ะ, and the agent hangs up on a willing
+  customer. If the first reply is a refusal, confirm once as if the line were
+  unclear: `ขออภัยนะคะ สัญญาณอาจไม่ค่อยชัด คุณลูกค้าไม่สะดวกคุยตอนนี้ใช่ไหมคะ`.
+  An ambiguous non-refusal — เหรอ, หา, อะไรนะ — is not a refusal; carry on.
+- **A customer repeating only ฮัลโหล / สวัสดี cannot hear the agent.** Never
+  read it as a refusal. Restate the purpose in new words, then ask whether
+  they can hear, and on the fourth time close with the reason and what happens
+  next: `เนื่องจากสัญญาณขัดข้อง เดี๋ยวให้เจ้าหน้าที่ติดต่อกลับไปใหม่นะคะ ขออนุญาตวางสายค่ะ`.
+- **Near-sound tables for fixed answers.** A state that expects a score or a
+  short choice can map common mishearings, e.g. ไซ / ไส / สี่ → 4. Always
+  scope it — `(ใช้เฉพาะขั้นตอนนี้เท่านั้น)` — or the agent applies it
+  everywhere and turns a plain ค่ะ into a 5.
+- **Rotate lines that repeat.** For a question asked several times in a call,
+  such as มีคำถามเพิ่มเติมไหมคะ, give at least three `examples` and instruct the
+  state to alternate. Forbid repeating the previous turn word for word; the
+  same information in new words is fine.
+- **Skip what was already said.** If the customer volunteers an answer before
+  it is asked, skip the question; once identity is confirmed, never confirm it
+  again.
+
+### Keeping the call on course
+
+- **Give persuasion a budget, counted in the agent's attempts** — not in the
+  customer's refusals, which the model miscounts. Either one retry after a
+  refusal, or three distinct attempts one turn each (answer the objection → a
+  limited offer → a final offer), with a single attempt when the obstacle
+  cannot be solved, such as not eligible or outside the service area.
+- **Cap re-asking.** If the answer does not fit, ask once more in different
+  words; after that use a stated default and confirm it. A customer asking
+  what the question means counts as the second ask.
+- **One diagnostic question, then answer.** "Understand the problem first"
+  instructions loop for many turns without ever answering.
+- **Give long instructions one step per turn** and wait for the customer
+  between steps, rather than reading out a whole procedure.
+- **Say what to do when the answer is unknown**, following the company's
+  policy — offer a callback, or simply say it is not known — and give a pool of
+  varied phrasings so the fallback does not sound scripted.
+
+### Dates
+
+- Enable the `resolve_date` tool and tell the agent to call it for every
+  relative day the customer names. With it on, drop elaborate "do not compute
+  dates" rules.
+- Without it, echo the customer's own words back rather than converting them
+  to a date or weekday, and ask again for an impossible date such as 31
+  เมษายน.
+- Dates from the system arrive as `30/06/2569`. Tell the agent never to read
+  `/` as ทับ or the digits as a run, and give it a month-number table so it
+  says สามสิบมิถุนายน สองพันห้าร้อยหกสิบเก้า. Looking up a table is not
+  computing, so it does not conflict with the rule above.
+
+### Pronunciation and pacing
+
+- **Thai abbreviations sit flush against their neighbours** — `สำหรับกลุ่มอสม.ดิฉันแนะนำ`,
+  not `กลุ่ม อสม. ดิฉัน`. A space makes TTS stumble.
+- **Separate list items with commas**, not spaces:
+  `บัตรประชาชน, ทะเบียนบ้าน, หรือสลิปเงินเดือน`. Spaces make the speech choppy.
+- **Addresses:** house numbers and postcodes digit by digit (`123/1` →
+  หนึ่งสองสามทับหนึ่ง, `77000` → เจ็ดเจ็ดศูนย์ศูนย์ศูนย์), abbreviations expanded
+  (ม. → หมู่, ต. → ตำบล), and a comma after each part.
+- **Units and abbreviations:** spell them out — `น.` after a time → นาฬิกา,
+  `มล.` → มิลลิลิตร, a range `100-150` → หนึ่งร้อยถึงหนึ่งร้อยห้าสิบ.
+- **Pacing tags:** `<speed ratio="0.6"/>` slows the following speech, and
+  `<break time="..."/>` inserts a pause. For something hard to catch — a LINE
+  ID, an email, a reference number — read it normally first, slower on the
+  second request, and in parts on the third, waiting for an acknowledgement
+  after each part.
+
+### When a rule is ignored
+
+Escalate in this order:
+
+1. Replace the prose rule with a ❌ / ✅ pair built from the line the agent
+   **actually said** in a test call, not an invented one.
+2. Gather small rules the agent keeps forgetting into one pre-speech checklist
+   — banned words, particle use, length, whether the fact is in the prompt.
+3. Remove the capability for that situation, e.g. disable a tool, instead of
+   adding another prohibition.
+
+### Knowledge base prompts
+
+Attaching a knowledge file is not enough; the prompt must say when and how to
+search it. Name the file, tell the agent to **search again on every question**
+rather than reuse the last result, say which terms make a good query (a model
+or brand name), which result fields to use, and how many results to present —
+usually the first only. Tell it to speak results naturally, not as a list.
+
 ## Before publishing
 
 1. Every `next_step` resolves to a real state id.

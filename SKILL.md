@@ -104,10 +104,68 @@ Record statuses: Called / โทรแล้ว, Pending / รอโทร, Call
 Missed / ไม่รับสาย, Busy / สายไม่ว่าง, Case Not Closed / ปิดเคสไม่ได้,
 Error / ผิดพลาด, Do Not Contact / ไม่ติดต่อ.
 
+## Working with the user
+
+Most users are not developers. They know the dashboard, not the API, so the
+work should end where they can see it.
+
+- **Point to where the change shows up.** After a write, name the dashboard
+  page the user can open to check it — e.g. "ทีม AI Agent → เปิดทีม →
+  ตั้งค่าผลลัพธ์หลังวางสาย" for a postprocessor, or the **Metadata** column on
+  สายทั้งหมด for extracted results.
+- **Suggest a test before going live.** After drafting or publishing an agent,
+  tell the user to open the agent, pick **แบบร่าง** or **เผยแพร่**, and use the
+  arrow beside **ทดลอง** → **ตั้งค่าและทดลอง**. Test calls are free and use no
+  real phone line. Choosing the job type **รับสาย** there shows every variable,
+  so customer context can be filled in by hand. Their transcripts are then
+  readable with `GET /client/agents/{slug}/chat-session-tests`.
+- **Say when something is dashboard-only.** Some tasks have no client API
+  route. Give the user the path in the table below instead of trying another
+  endpoint.
+
+### Before building a new agent
+
+Collect these first, and ask for whatever is missing rather than inventing it:
+
+- the agent's role, **gender**, personality, and tone
+- the company or brand it represents
+- who it will call or answer, e.g. customers who are overdue or just ordered
+- what it must say on every call, e.g. a recording consent notice, the due
+  date, the amount owed
+- the goal — what the customer should agree to or provide
+- hard rules — things it must never do or always do
+- what should be recorded after the call — the outcome, a promised date, and
+  so on; this becomes the disposition outcomes and outcome metadata
+
+### Dashboard-only tasks
+
+| Task | Where in the dashboard |
+|---|---|
+| Create, rename, or delete an API key | การตั้งค่า → API Keys |
+| Assign a phone number to an inbound team | เบอร์โทรศัพท์ → ⋮ → แก้ไข → ทีมรับสายเข้า |
+| Upload knowledge files | คลังความรู้ → อัปโหลด; attach in the agent → แก้ไขแบบร่าง → คลังความรู้ icon → บันทึกแบบร่าง |
+| Create, copy, or delete a customer template | สายออก → จัดการเทมเพลต |
+| Upload a batch from a CSV file | สายออก → สร้าง Batch |
+| Make a test call or chat | the agent → ทดลอง → ตั้งค่าและทดลอง |
+| Add a cloned voice | a service requested from the Ingfah team |
+| Data retention, billing, activity logs, guest access | การตั้งค่า — **Owner** only |
+
+Knowledge files must be `.pdf`, `.docx`, `.txt`, or `.md`, and must reach
+**พร้อมใช้งาน** before they are attached. A batch CSV must be at most 25 MB,
+with column names matching its template.
+
+A missing phone number on เบอร์โทรศัพท์ or on batch creation means no line is
+connected yet: the user connects their own telephony or asks the Ingfah team
+for a number, which is billed separately.
+
 ## Authentication
 
 - Send the key only in the `X-Api-Key` request header.
 - If no key is available, ask the user to provide their Ingfah client API key.
+  If they have none, tell them to create one at **การตั้งค่า → API Keys →
+  สร้าง API Key** on https://ingfah.ai/login. The key is shown **once** only; a
+  lost key cannot be recovered, so they create a new one and delete the old.
+  A new key has the full access of its account.
 - Never echo, log, save, commit, or include the key in generated files, URLs, or error messages.
 - Do not ask the user to put the key in this repository.
 - Treat the key as available only for the current task unless the user explicitly requests persistent configuration.
@@ -231,6 +289,9 @@ batch request rather than relying on this summary.
 - Before creating a batch, retrieve outbound options and products so the request uses a valid option ID, an outbound product ID, and every field the option marks `is_required`.
 - A successful batch creation can start or schedule real outbound calls. Always show a concise preview and obtain explicit user confirmation immediately before sending it.
 - Pause, resume, and cancel are state-changing actions and require explicit confirmation. Cancel is permanent and cannot be undone with resume. Batch status may lag a few seconds behind a successful cancel response.
+- Pause and cancel stop calls that have not started, but a call already in
+  progress runs to its end. Say so, so the user does not expect a live call to
+  drop. A cancelled batch moves to the **สิ้นสุด** tab with status ยกเลิกแล้ว.
 - If batch creation returns `404 resource not found`, report that creation is unavailable on the configured deployment and do not repeatedly retry or substitute another endpoint.
 - A `404` for a specific batch ID means that batch was not found; it is not evidence that API-key authentication failed.
 
@@ -330,7 +391,13 @@ renders to, and how to branch on customer data with Jinja.
 2. `POST /client/agents/{slug}/revisions` — carries the actual prompt
    (`name`, `vocal_name`, `greeting_message`, `ai_greeting_message`,
    `ai_instruction_identity`, `ai_instruction_task`, `ai_instruction_flow`,
-   `voice_id`), then publish it. Nothing is live until published.
+   `voice_id`), then publish it. Nothing is live until published. A revision
+   also carries `voice_speed` (a multiplier, `1` is normal — the dashboard's
+   ความเร็วในการพูด) and `ai_instruction_variables`, the agent-level variables
+   the dashboard edits under the `{}` icon: values reused across the prompt,
+   such as a brand name, a discount code, or the politeness particle, written
+   as `{{name}}`. `{{agentName}}` is always available and is the agent's
+   `name`.
 3. `POST /client/products` — an agent cannot take or place calls on its own. A
    product is the callable team that routes to it. Pass the agent's numeric
    `id` as `starting_agent_id`, plus `name`, `direction` (`inbound` or
@@ -367,6 +434,15 @@ Rules:
 - Visibility is creator-only: the API key acts as the admin it belongs to, so a
   key whose admin did not create the agent gets `403` even with
   `ai_agents:write`. Report that as a permission rule, not an auth failure.
+- A **private / ส่วนตัว** agent is visible only to its creator and to Owners.
+  Operators see public agents and their own. When a teammate says they cannot
+  find an agent, check its visibility first.
+- Publishing replaces the published version and the draft disappears. In the
+  dashboard, a new draft is started with **ร่างใหม่จากเผยแพร่**, which copies
+  the published version — the same as reading the latest revision and posting
+  it back.
+- The greeting cannot be interrupted: the caller hears all of it before the
+  agent starts listening. Keep it short.
 
 ## AI team (product) handling
 
@@ -386,6 +462,19 @@ Beyond creation it can be read, updated, made public or private, and deleted.
   assigned to the team or one of its outbound batches is still active. Take the
   number off and cancel the batch first; report the `422` as a state rule, not
   a permission problem.
+
+- `direction` is fixed at creation: `PUT` does not take it, and the dashboard
+  warns that a team type cannot be changed later. Confirm inbound vs outbound
+  before creating.
+- Every agent in a voice team must be a published voice agent. One agent can
+  belong to several teams, and an agent that takes over a transferred call
+  keeps the conversation so far.
+- Split work across agents rather than overloading one: a first agent that
+  asks the language or the topic, then transfers to a specialist with its own
+  knowledge. Each agent's `vocal_name` is how the others refer to it when
+  transferring.
+- An inbound team takes calls only once a phone number is assigned to it,
+  which is done in the dashboard (see [Dashboard-only tasks](#dashboard-only-tasks)).
 
 Deleting a team removes the callable route to its agent and its
 postprocessors. Confirm explicitly before updating, changing visibility, or
@@ -409,15 +498,43 @@ These are the tools an agent may call. Read them before editing an agent whose
   `include_global`, `sort_by`, and `sort_direction`. Repeat a parameter to pass
   several values.
 
+### Built-in tools worth offering
+
+Before writing a custom tool, check whether a built-in one already does it.
+The dashboard shows these under **Tools ทั่วไป** and **Tools เกี่ยวกับการโทร**:
+
+| Tool | Does |
+|---|---|
+| `resolve_date` | turns spoken dates — พรุ่งนี้, วันพุธหน้า, อีกสองวัน — into a calendar date |
+| `validate_id_card` | checks a Thai ID number's format and check digit |
+| `calculate_product_cart` | totals items × price × quantity |
+| `calculate_remaining` | subtracts one value from another, e.g. amount owed minus amount paid |
+| `end_call_keyword` | hangs up when a recognised closing phrase is spoken |
+| `collect_id_card` | collects a 13-digit ID from the keypad instead of by voice |
+
+Models get relative dates and weekdays wrong, confidently. Any agent that
+takes a date from the customer — a payment promise, a callback, a booking —
+should have `resolve_date` enabled, and its prompt should call it every time
+the customer names a relative day.
+
+When a prompt rule does not stop a behaviour, remove the capability instead:
+for example, take the transfer tool off an agent that must not transfer out of
+hours, rather than adding another prohibition.
+
 ### Writing a plugin function
 
 `POST /client/plugin-functions` requires `signature`, `description`, and
 `integration`. `signature` is the function name the agent calls and must be
-unique within the client — a duplicate returns `409`. `description` is what
-the agent is told the tool does, at most 1000 characters.
+unique within the client — a duplicate returns `409`. It may use only
+`a-z`, `A-Z`, `0-9`, and `_`; name it for what it does, such as
+`get_outstanding_balance`, because the agent picks tools partly by name.
+`description` is what the agent is told the tool does and when to use it, at
+most 1000 characters.
 
 - `parameters` are the arguments the agent supplies from the conversation; each
-  needs `name` and `type`, plus `description` and `required`.
+  needs `name` and `type`, plus `description` and `required`. A name must start
+  with a letter and use only `a-z`, `A-Z`, `0-9`, and `_`. Types are
+  `string`, `number`, `boolean`, `object`, and `array`.
 - `integration_parameters` are the integration's own settings as `{key, value}`
   pairs. For `http`, `method`, `base_url`, and `url` are required, and `value`
   may carry `{{name}}` placeholders filled from `parameters`. `base_url` must
@@ -446,6 +563,8 @@ the agent is told the tool does, at most 1000 characters.
   first and send every parameter and integration parameter again, carrying the
   `id` of each stored parameter that stays — otherwise a rename is taken for a
   delete plus an add. A global tool cannot be updated by a client (`403`).
+  An edit changes every agent using the tool at once; name those agents in the
+  preview before confirming.
 - `POST /client/plugin-functions/{id}/duplicate` takes a new unique
   `signature` and copies the tool, integration parameters included. The copy is
   attached to no agent.
@@ -499,6 +618,22 @@ then whichever field the type requires. `PUT` takes the same body without
   JSON Schema. A bare schema returns `400 json_schema.name is required`, and a
   wrapper without `schema` returns `400 json_schema.schema is required`.
   `is_enabled` applies to this type only.
+- A disposition set needs **at least two** outcomes in the dashboard; design
+  it that way.
+- An outcome name can carry a value, e.g. `ยืนยัน DD-MM-YYYY` with the prompt
+  saying DD-MM-YYYY is the promised date in Buddhist-era years. Calls then
+  come back labelled `ยืนยัน 12-04-2569`, which the dashboard can group and
+  report on. Use it only when the value itself should be a filterable label;
+  otherwise put the value in outcome metadata.
+- For `outcome_metadata`, `json_schema.name` allows only `a-z`, `A-Z`, `0-9`,
+  and `_`, at most 64 characters. `anyOf`, `oneOf`, `$ref`, and
+  `patternProperties` are not supported. With `"strict": true`, every key must
+  be listed in `required`. Each key's `description` is what the extractor goes
+  by, so say the format: `วันที่ลูกค้ารับปากว่าจะชำระ รูปแบบ YYYY-MM-DD`, not
+  `วันที่จ่าย`.
+- A postprocessor change applies to **new calls only**; calls that already
+  ended are not reprocessed. Tell the user, so they do not look for new labels
+  on old calls.
 
 ```json
 {
@@ -669,3 +804,8 @@ or send `{}`, and the automation runs for every session.
 ## Response handling
 
 Return concise, structured summaries. Preserve identifiers, statuses, timestamps, and relevant error details, but remove credentials and unrelated personal or sensitive data. For downloads, save or present the result only when the user explicitly requests it.
+
+Recordings, transcripts, and batch data are deleted automatically once they
+pass the account's data-retention period, set by an Owner under การตั้งค่า →
+การเก็บรักษาข้อมูล. When an old call has no recording or transcript, mention
+retention as a likely reason rather than reporting a fault.
