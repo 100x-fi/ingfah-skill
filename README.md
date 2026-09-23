@@ -26,36 +26,32 @@ and keeps the API key out of files, logs, and command output.
 
 ## Install
 
-Clone the repository somewhere permanent, then link it into your agent's
-skills directory. Linking rather than copying means `git pull` updates the
-installed skill.
+Install with the [`skills`](https://skills.sh) CLI, which pulls straight from
+this repository's `main` branch:
 
-### Claude Code
+```bash
+npx skills add 100x-fi/ingfah-skill -g            # personal, every project
+npx skills add 100x-fi/ingfah-skill               # this project only
+```
 
-Personal skill, available in every project:
+Start a new session afterwards — skills are discovered at startup. Confirm it
+loaded by asking the agent to list your Ingfah products.
+
+The CLI detects Claude Code and other `SKILL.md`-style agents and links the
+skill into each one's skills directory. The skill has no tool-specific
+dependencies — the agent only needs to be able to run
+`python3 scripts/ingfah_api.py`.
+
+### From a git clone
+
+To work on the skill itself, clone it and link it in instead. Linking rather
+than copying means `git pull` updates the installed skill.
 
 ```bash
 git clone git@github.com:100x-fi/ingfah-skill.git ~/src/ingfah-skill
 mkdir -p ~/.claude/skills
 ln -s ~/src/ingfah-skill ~/.claude/skills/ingfah-skill
 ```
-
-Or scoped to one project, for a repo where the whole team should have it:
-
-```bash
-mkdir -p .claude/skills
-git clone git@github.com:100x-fi/ingfah-skill.git .claude/skills/ingfah-skill
-```
-
-Start a new session afterwards — skills are discovered at startup. Confirm it
-loaded by asking the agent to list your Ingfah products.
-
-### Other agents
-
-Any agent that reads `SKILL.md`-style skills works the same way: place or link
-the directory wherever that tool looks for skills. The skill has no
-tool-specific dependencies — the agent only needs to be able to run
-`python3 scripts/ingfah_api.py`.
 
 ## Providing the API key
 
@@ -100,8 +96,33 @@ read-only request.
 
 ## Updating
 
+Update by hand:
+
 ```bash
-cd ~/src/ingfah-skill && git pull
+npx skills update ingfah-skill
 ```
 
-Restart your agent session to pick up the changes.
+Or keep it current automatically with a Claude Code `SessionStart` hook in
+`~/.claude/settings.json`. The hook runs before each session starts, outside
+the agent's context, so it costs no tokens:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "npx -y skills update -g -y >/dev/null 2>&1 || true" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+This updates every globally installed skill, not just this one. If an update
+lands after the session has loaded its skills, it takes effect in the next
+session.
+
+For a git clone, use `git -C ~/src/ingfah-skill pull --ff-only -q || true` as
+the hook command instead.
