@@ -164,9 +164,21 @@ class IngfahApiTests(unittest.TestCase):
             urlopen.assert_not_called()
 
     def test_unlisted_product_subroutes_stay_rejected(self):
-        for path in ("/client/products/227/automations",
-                     "/client/products/227/postprocessors"):
-            self.assertFalse(ingfah_api._is_allowed("GET", path), path)
+        # There is no GET postprocessors route: a product's postprocessors are
+        # read from GET /client/products/{id}. Automations, by contrast, have
+        # their own list route, covered below.
+        self.assertFalse(ingfah_api._is_allowed("GET", "/client/products/227/postprocessors"))
+
+    def test_automation_routes_are_allowed(self):
+        for method, path in (
+            ("GET", "/client/products/227/automations"),
+            ("POST", "/client/products/227/automations"),
+            ("PUT", "/client/products/227/automations/5"),
+            ("DELETE", "/client/products/227/automations/5"),
+        ):
+            self.assertTrue(ingfah_api._is_allowed(method, path), f"{method} {path}")
+        # The collection takes no id, and an automation is not deleted by POST.
+        self.assertFalse(ingfah_api._is_allowed("POST", "/client/products/227/automations/5"))
 
 
 if __name__ == "__main__":
