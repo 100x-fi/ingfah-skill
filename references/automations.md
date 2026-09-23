@@ -27,10 +27,9 @@ at creation with `400 automation_type "x" requires trigger_event "y"`:
 | `webhook` | `session_ended` | Sends an HTTP request when the call or chat ends |
 | `mark_dnc` | `disposition_outcome_set` | Marks the number do-not-contact / ไม่ติดต่อ |
 
-These two are the general-purpose types. A handful of client-specific webhook
-types also exist, each built for one customer's integration and named after
-them. Never offer or guess one: if a read returns an automation whose type is
-not in the table above, report it by the name the API gave and leave it alone.
+These two are the general-purpose types. Never offer or guess another type:
+if a read returns an automation whose type is not in the table above, report
+it by the name the API gave and leave it alone.
 
 `session_started` and `outcome_metadata_set` are also valid trigger values,
 but no general-purpose type accepts them. Some other type names exist in the
@@ -92,7 +91,7 @@ an SMS provider's own API, exactly as the CRM example points at a CRM.
   "automation_type": "webhook",
   "trigger_condition": {"disposition_outcome": "ลูกค้าตกลง"},
   "automation_config": {
-    "url": "https://api-v2.thaibulksms.com/sms",
+    "url": "https://sms.example.com/send",
     "method": "POST",
     "headers": {"Authorization": "Bearer REDACTED"},
     "body": {
