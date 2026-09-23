@@ -60,6 +60,9 @@ python3 scripts/ingfah_api.py --confirm POST /client/outbound/batches/7/pause
 ### `client_products:write`
 
 - `POST /client/products`
+- `PUT /client/products/{id}`
+- `PUT /client/products/{id}/visibility`
+- `DELETE /client/products/{id}`
 - `POST /client/products/{id}/postprocessors`
 - `PUT /client/products/{id}/postprocessors/{postprocessorId}`
 - `DELETE /client/products/{id}/postprocessors/{postprocessorId}`
@@ -71,6 +74,10 @@ python3 scripts/ingfah_api.py --confirm POST /client/outbound/batches/7/pause
 - `GET /client/agents/{slug}`
 - `GET /client/agents/{slug}/revisions`
 - `GET /client/agents/{slug}/revisions/{id}`
+- `GET /client/phone-tools`
+- `GET /client/plugin-functions`
+- `GET /client/plugin-functions/{id}`
+- `GET /client/plugin-function-integrations`
 
 ### `ai_agents:write`
 
@@ -82,6 +89,11 @@ python3 scripts/ingfah_api.py --confirm POST /client/outbound/batches/7/pause
 - `POST /client/agents/{slug}/revisions`
 - `POST /client/agents/{slug}/revisions/{id}/publish`
 - `DELETE /client/agents/{slug}/revisions/{id}`
+- `POST /client/plugin-functions`
+- `PUT /client/plugin-functions/{id}`
+- `DELETE /client/plugin-functions/{id}`
+- `POST /client/plugin-functions/{id}/duplicate`
+- `POST /client/plugin-functions/{id}/test-run`
 
 ### `chat_sessions:read`
 
@@ -268,6 +280,97 @@ Rules:
 - Visibility is creator-only: the API key acts as the admin it belongs to, so a
   key whose admin did not create the agent gets `403` even with
   `ai_agents:write`. Report that as a permission rule, not an auth failure.
+
+## AI team (product) handling
+
+A product is an AI team. Beyond creation it can be read, updated, made
+public or private, and deleted.
+
+- `PUT /client/products/{id}` takes `name`, `description`,
+  `starting_agent_id`, `channel_type`, and `transferabilities`. `channel_type`
+  is accepted only when it equals the current value — changing it returns
+  `400`. `starting_agent_id` must name an agent with a published revision that
+  matches the team's channel type. `transferabilities`, when present, replaces
+  the whole list rather than appending to it.
+- `PUT /client/products/{id}/visibility` takes `{"visibility": "private"|"public"}`.
+  Like agent visibility, only the admin who created the team may change it: a
+  key belonging to another admin gets `403` even with `client_products:write`.
+- `DELETE /client/products/{id}` is refused with `422` while a phone number is
+  assigned to the team or one of its outbound batches is still active. Take the
+  number off and cancel the batch first; report the `422` as a state rule, not
+  a permission problem.
+
+Deleting a team removes the callable route to its agent and its
+postprocessors. Confirm explicitly before updating, changing visibility, or
+deleting, and name the team being affected.
+
+## Phone tools and plugin functions
+
+These are the tools an agent may call. Read them before editing an agent whose
+`phone_tools` or plugin functions are changing.
+
+- `GET /client/phone-tools` lists the on-call tools an audio agent may use —
+  transfer to a human, send DTMF, hang up — the platform's global ones plus the
+  client's own. Their ids go in an agent's or revision's `phone_tools`.
+  Supports `page`, `per_page` (max 100), `search`, and `ids` (comma-separated).
+- `GET /client/plugin-function-integrations` is the catalog a plugin function
+  is built from: each integration, its methods, and the integration parameters
+  it takes. Read it before creating a function so `integration` and
+  `integration_parameters` use real keys.
+- `GET /client/plugin-functions` supports `page`, `per_page` (max 100),
+  `search`, `integrations`, `exclude_integrations`, `methods`, `id`,
+  `include_global`, `sort_by`, and `sort_direction`. Repeat a parameter to pass
+  several values.
+
+### Writing a plugin function
+
+`POST /client/plugin-functions` requires `signature`, `description`, and
+`integration`. `signature` is the function name the agent calls and must be
+unique within the client — a duplicate returns `409`. `description` is what
+the agent is told the tool does, at most 1000 characters.
+
+- `parameters` are the arguments the agent supplies from the conversation; each
+  needs `name` and `type`, plus `description` and `required`.
+- `integration_parameters` are the integration's own settings as `{key, value}`
+  pairs. For `http`, `method`, `base_url`, and `url` are required, and `value`
+  may carry `{{name}}` placeholders filled from `parameters`. `base_url` must
+  not resolve to a private, loopback, or link-local address.
+- `method` comes from the integrations catalog; omit it for `http`.
+- `async_enabled` lets the agent keep talking while a slow tool runs, and then
+  `async_params.initial_update_message` is required.
+
+```json
+{
+  "signature": "lookup_order",
+  "description": "Look an order up by its number",
+  "integration": "http",
+  "parameters": [
+    {"name": "order_id", "type": "string", "description": "The order number the customer gives", "required": true}
+  ],
+  "integration_parameters": [
+    {"key": "method", "value": "GET"},
+    {"key": "base_url", "value": "https://example.com/api"},
+    {"key": "url", "value": "/orders/{{order_id}}"}
+  ]
+}
+```
+
+- `PUT /client/plugin-functions/{id}` **replaces the whole tool**. Read it
+  first and send every parameter and integration parameter again, carrying the
+  `id` of each stored parameter that stays — otherwise a rename is taken for a
+  delete plus an add. A global tool cannot be updated by a client (`403`).
+- `POST /client/plugin-functions/{id}/duplicate` takes a new unique
+  `signature` and copies the tool, integration parameters included. The copy is
+  attached to no agent.
+- `POST /client/plugin-functions/{id}/test-run` takes `parameters` keyed by
+  name and **really runs the tool** — an `http` tool sends its request against
+  the live target. Confirm with the user before running one. A failed run is
+  still `200` with status `invalid` or `error`, so read the status rather than
+  the HTTP code. It is limited to 10 runs per admin per minute (`429`), shared
+  with that admin's dashboard runs and other keys.
+- `DELETE /client/plugin-functions/{id}` is refused with `409` while any agent
+  uses the tool, in its published version or its draft; the response lists
+  those agents. Report them instead of retrying.
 
 ## Disposition outcomes and outcome metadata
 
