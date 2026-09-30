@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 DEFAULT_BASE_URL = "https://api.ingfah.ai"
 API_KEY_ENV = "INGFAH_API_KEY"
@@ -77,6 +77,25 @@ ROUTE_PATTERNS = (
 )
 
 
+REVISION_CREATE = re.compile(r"^/client/agents/([^/]+)/revisions$")
+
+# A revision replaces the agent's whole configuration, tool bindings included,
+# and the backend stores exactly the id lists it is sent: an omitted
+# `phone_tools` or `ai_plugin_function_ids` saves a revision with NO tools.
+# The revision read (GET .../revisions/{id}) does not return either list, so a
+# body copied from it strips every tool. The bindings are only readable from
+# GET /client/agents/{slug} (the published revision), under the names below.
+# Real incident, 2026-09-30: a prompt-only edit published this way unbound an
+# agent's transfer and hang-up tools; the agent then spoke
+# "transfer_to_human_agent{}" aloud and repeated its goodbye without hanging up.
+REVISION_TOOL_FIELDS = (
+    # (revision body key, agent read key, dashboard name)
+    ("phone_tools", "phone_tools", "Tools เกี่ยวกับการโทร (phone tools)"),
+    ("ai_plugin_function_ids", "ai_plugin_functions", "Tools ทั่วไป (plugin functions)"),
+)
+FLOW_TOOL_KEYS = (("phone_tools", "phone_tools"), ("plugin_functions", "ai_plugin_function_ids"))
+
+
 class ClientError(Exception):
     """User-safe client or API error."""
 
@@ -110,7 +129,79 @@ def _read_key() -> str:
     return key
 
 
-def request(method: str, path: str, body: Any = None, *, confirm: bool = False, query: str = "") -> ApiResponse:
+def _ids(items: Any) -> set[int]:
+    out: set[int] = set()
+    for item in items or []:
+        value = item.get("id") if isinstance(item, dict) else item
+        try:
+            out.add(int(value))
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
+def _unwrap(body: Any, key: str) -> Any:
+    data = body.get("data", body) if isinstance(body, dict) else body
+    if isinstance(data, dict) and isinstance(data.get(key), dict):
+        return data[key]
+    return data
+
+
+def check_revision_tools(slug: str, body: Any, current_agent: Any) -> list[str]:
+    """Return the reasons a revision body would unbind tools; empty when safe.
+
+    `current_agent` is the GET /client/agents/{slug} response. A text agent's
+    phone tools are dropped by the server anyway, so they are not compared.
+    """
+    if not isinstance(body, dict):
+        return []
+    agent = _unwrap(current_agent, "agent") if current_agent is not None else {}
+    agent = agent if isinstance(agent, dict) else {}
+    is_text = agent.get("type") == "text"
+    problems: list[str] = []
+    for body_key, agent_key, label in REVISION_TOOL_FIELDS:
+        if body_key == "phone_tools" and is_text:
+            continue
+        bound = _ids(agent.get(agent_key))
+        if body_key not in body:
+            problems.append(
+                f"`{body_key}` is missing, which saves the revision with no {label}. "
+                f"The revision read does not return it: copy the ids from GET /client/agents/{slug} "
+                f"`{agent_key}` (currently {sorted(bound) or '[]'})"
+            )
+            continue
+        dropped = bound - _ids(body.get(body_key))
+        if dropped:
+            problems.append(
+                f"`{body_key}` drops {label} {sorted(dropped)} that the published agent uses "
+                f"(bound now: {sorted(bound)})"
+            )
+    flow = body.get("ai_instruction_flow")
+    for state in flow if isinstance(flow, list) else []:
+        guidelines = state.get("guidelines") if isinstance(state, dict) else None
+        if not isinstance(guidelines, dict):
+            continue
+        for flow_key, body_key in FLOW_TOOL_KEYS:
+            if body_key == "phone_tools" and is_text:
+                continue
+            missing = _ids(guidelines.get(flow_key)) - _ids(body.get(body_key))
+            if missing:
+                problems.append(
+                    f"flow state {state.get('id')!r} uses {flow_key} {sorted(missing)} "
+                    f"that are not in `{body_key}`, so the state cannot call them"
+                )
+    return problems
+
+
+def request(
+    method: str,
+    path: str,
+    body: Any = None,
+    *,
+    confirm: bool = False,
+    query: str = "",
+    allow_tool_drop: bool = False,
+) -> ApiResponse:
     method = method.upper()
     if not path.startswith("/") or "?" in path:
         raise ClientError("path must be an absolute API path without a query string")
@@ -118,6 +209,18 @@ def request(method: str, path: str, body: Any = None, *, confirm: bool = False, 
         raise ClientError(f"route is not available through this skill: {method} {path}")
     if _is_mutation(method, path) and not confirm:
         raise ClientError("mutation requires explicit confirmation (--confirm)")
+
+    revision = REVISION_CREATE.fullmatch(path) if method == "POST" else None
+    if revision and not allow_tool_drop:
+        slug = revision.group(1)
+        current = request("GET", f"/client/agents/{slug}").body
+        problems = check_revision_tools(slug, body, current)
+        if problems:
+            raise ClientError(
+                "refusing to create a revision that would unbind tools:\n  - "
+                + "\n  - ".join(problems)
+                + "\nPass --allow-tool-drop only when removing these tools is the intended change."
+            )
 
     key = _read_key()
     url = f"{_base_url()}{path}{query}"
@@ -219,13 +322,25 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", dest="json_body", help="JSON request body, inline or a path to a .json file")
     parser.add_argument("--confirm", action="store_true", help="confirm a state-changing request")
     parser.add_argument("--output", help="save the response body to this new file instead of printing it")
+    parser.add_argument(
+        "--allow-tool-drop",
+        action="store_true",
+        help="allow a new revision to unbind tools the published agent uses (only when that is the intended change)",
+    )
     args = parser.parse_args(argv)
 
     try:
         if args.output and os.path.exists(args.output):
             raise ClientError(f"output file already exists: {args.output}")
         body = _load_json_body(args.json_body) if args.json_body else None
-        response = request(args.method, args.path, body, confirm=args.confirm, query=args.query)
+        response = request(
+            args.method,
+            args.path,
+            body,
+            confirm=args.confirm,
+            query=args.query,
+            allow_tool_drop=args.allow_tool_drop,
+        )
         if args.output:
             size = _save_body(response.body, args.output)
             print(f"saved {size} bytes ({response.content_type}) to {args.output}")

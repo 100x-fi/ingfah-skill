@@ -3,6 +3,13 @@
 These are the tools an agent may call. Read them before editing an agent whose
 `phone_tools` or plugin functions are changing.
 
+**A tool is callable only while it is bound to the published revision.** Every
+new revision must re-send the ids (`phone_tools`, `ai_plugin_function_ids`),
+and the revision read does not return them. See
+`references/agents-and-teams.md` → "Carry the tools into every revision". A
+tool that exists but is not bound gives no error anywhere. The agent just
+cannot call it, and it may say the tool's name out loud instead.
+
 - `GET /client/phone-tools` lists the on-call tools an audio agent may use —
   transfer to a human, send DTMF, hang up — the platform's global ones plus the
   client's own. Their ids go in an agent's or revision's `phone_tools`.
@@ -34,6 +41,16 @@ Models get relative dates and weekdays wrong, confidently. Any agent that
 takes a date from the customer — a payment promise, a callback, a booking —
 should have `resolve_date` enabled, and its prompt should call it every time
 the customer names a relative day.
+
+### A tool's description is part of every prompt
+
+The `description` of every bound tool is sent with every turn, not only when
+the tool might fire. Keep it consistent with the prompt. If the prompt says
+"transfer silently" while the tool description says "say one sentence first",
+the model gets two contradicting instructions, and the one it follows varies
+from call to call. Put *when* to call the tool in the description, and do not
+restate other prompt rules there "for safety": one extra line in a transfer
+tool's description has been measured nudging unrelated turns toward transferring.
 
 When a prompt rule does not stop a behaviour, remove the capability instead:
 for example, take the transfer tool off an agent that must not transfer out of

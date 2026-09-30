@@ -99,10 +99,13 @@ by the spoken line, not by the flag on its own. A terminal state with the flag
 set and a closing line the platform does not recognise leaves the call open
 with neither side speaking.
 
-So a terminal state needs both:
+So a terminal state needs all three:
 
-1. `"guidelines": {"end_call_keyword": true}` on the state, and
-2. at least one `examples` entry ending in a recognised closing phrase.
+1. `"guidelines": {"end_call_keyword": true}` on the state,
+2. at least one `examples` entry ending in a recognised closing phrase, and
+3. the `end_call_keyword` phone tool bound to the revision (`phone_tools`).
+   Without it nothing listens for the phrase: the agent says goodbye, the line
+   stays open, and it says goodbye again on the next silence.
 
 ### Recognised closing phrases
 
@@ -420,6 +423,26 @@ Escalate in this order:
 3. Remove the capability for that situation, e.g. disable a tool, instead of
    adding another prohibition.
 
+### Tools in the prompt
+
+- **Never quote a forbidden output.** "ห้ามพิมพ์ transfer_to_human_agent{}"
+  puts the exact string in front of the model and makes it more likely.
+  Describe the mistake instead of writing it out; the same goes for ❌
+  examples that contain a tool name or code.
+- **Make transfers silent.** The turn that transfers calls the tool and
+  speaks nothing; the transfer tool's own hold message tells the caller to
+  wait. Asking for "one sentence, then the call" in the same turn is the
+  pattern in which a model writes the call as text (see
+  `references/troubleshooting.md`). Keep spoken-transfer lines out of the
+  flow's `examples` for the same reason, since a scripted line is copied
+  word for word.
+- **One instruction per tool, in one place.** The tool's `description` travels
+  with every turn (`references/tools.md`); if the prompt and the description
+  disagree, change them together.
+- **Remove what competes with the tool in that state.** A transfer state that
+  also says "ask them to send details on LINE" gets a LINE redirect instead
+  of a transfer.
+
 ### Knowledge base prompts
 
 Attaching a knowledge file is not enough; the prompt must say when and how to
@@ -443,6 +466,12 @@ usually the first only. Tell it to speak results naturally, not as a list.
    confirm no template tag survived as literal text.
 8. The disposition outcome list and the outcome metadata schema agree with the
    flow — every outcome the flow can produce is a label, and vice versa.
+9. **Every tool the prompt or a state relies on is bound in the revision
+   body** — `phone_tools` and `ai_plugin_function_ids` copied from
+   `GET /client/agents/{slug}`, including `end_call_keyword` and the transfer
+   tool — and was read back on the agent after publishing
+   (`references/agents-and-teams.md`).
+10. No rule or example quotes a tool name or code the agent must not say.
 
 Publish only after the user confirms. A published revision changes how the
 agent talks to real customers on the next call.

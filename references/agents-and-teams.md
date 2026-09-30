@@ -62,7 +62,14 @@ Rules:
   the fields being edited, and post the whole body back. `name`,
   `greeting_message`, and `ai_greeting_message` are required; a revision read
   returns `greeting_message` and a nested `voice` object, so map
-  `voice.id` to `voice_id` when reposting.
+  `voice.id` to `voice_id` when reposting. **The tool bindings are not in the
+  revision read at all** — see "Carry the tools into every revision" below.
+- **Publish the revision you verified, and re-read just before publishing.**
+  Several people can edit the same agent within minutes (one agent took six
+  publishes in two hours on 2026-09-30). Publish by id
+  (`POST .../revisions/{id}/publish`), which fails if someone drafted after
+  you; if the published revision changed since you read it, start again from
+  the new one rather than posting your older copy over their change.
 - Deleting a revision is a soft delete: it comes back `status: deleted` with
   `deleted_at` set, and it still appears in the revisions list and is still
   readable by id. Filter on `status` before reporting a revision list, and do
@@ -81,6 +88,62 @@ Rules:
   it back.
 - The greeting cannot be interrupted: the caller hears all of it before the
   agent starts listening. Keep it short.
+
+## Carry the tools into every revision
+
+A revision stores exactly the tool ids it is sent, and **an omitted list means
+no tools**. This is the most damaging silent mistake in the revision workflow,
+because the prompt reads back perfectly and the agent still breaks on the
+next call.
+
+| Revision body key (write) | Where the current ids are (read) | Dashboard |
+|---|---|---|
+| `phone_tools` — ids | `GET /client/agents/{slug}` → `phone_tools[].id` | Tools เกี่ยวกับการโทร |
+| `ai_plugin_function_ids` — ids | `GET /client/agents/{slug}` → `ai_plugin_functions[].id` | Tools ทั่วไป |
+
+`GET /client/agents/{slug}/revisions/{id}` returns **neither** list. A body
+built only from the revision read — the obvious "read, edit the prompt, post
+it back" — unbinds every tool.
+
+**What it looked like in production (2026-09-30).** A prompt-only edit was
+published this way. The agent lost its transfer tool and `end_call_keyword`.
+For the next two hours it told callers "เดี๋ยวผมโอนสายให้เจ้าหน้าที่นะครับ
+transfer_to_human_agent{}" — reading the tool's name aloud — and never
+transferred. It also repeated its goodbye because nothing could hang up the call.
+7 of the next 11 calls were affected. The revision read back looked correct.
+
+Rules:
+
+1. **Before drafting**, read `GET /client/agents/{slug}` and copy
+   `phone_tools[].id` and `ai_plugin_functions[].id` into the body as
+   `phone_tools` and `ai_plugin_function_ids`. Send them even when unchanged,
+   and even when empty on purpose.
+2. **Every tool a flow state names must be bound.** A state's
+   `guidelines.plugin_functions[].id` must be in `ai_plugin_function_ids`, and
+   its `guidelines.phone_tools[].id` in `phone_tools`, or that state cannot
+   call it.
+3. **`scripts/ingfah_api.py` enforces 1 and 2.** On
+   `POST /client/agents/{slug}/revisions` it reads the agent first and refuses
+   a body that omits either list, drops an id the published agent uses, or
+   names a state tool that is not bound. Pass `--allow-tool-drop` **only**
+   when removing a tool is the change the user asked for, and name the tool
+   being removed in the preview.
+4. **Show the tool lists in the preview** next to the prompt diff: "Tools
+   stay: transfer_to_human_agent, end_call_keyword, …". A user can catch a
+   missing tool there; they cannot catch it in a prompt diff.
+5. **After publishing**, read `GET /client/agents/{slug}` again and compare
+   `phone_tools` and `ai_plugin_functions` with what you sent. The create
+   response also echoes the revision's `phone_tools`. Report a mismatch
+   instead of success.
+6. **After the next real call**, open it (`GET /client/chat-sessions/{uuid}`):
+   a transfer shows as a message with `role: tool` and
+   `tool_name: transfer_to_human_agent`. The agent announcing a transfer with
+   no such message means the tool did not run.
+
+A voice agent that should hang up needs `end_call_keyword` bound as well as
+the `end_call_keyword` flag on its terminal state (see
+`references/prompt-authoring.md` → Ending the call). A new agent does not get
+it automatically. Text agents take no phone tools; the server drops them.
 
 # AI team (product) handling
 

@@ -254,5 +254,84 @@ class IngfahApiTests(unittest.TestCase):
                 self.assertIn("already exists", stderr.getvalue())
                 self.assertEqual(request.call_count, 1)
 
+class RevisionToolGuardTests(unittest.TestCase):
+    """A revision must never silently unbind the tools the live agent uses."""
+
+    AGENT = {
+        "status": "success",
+        "data": {
+            "slug": "my-agent",
+            "type": "audio",
+            "phone_tools": [{"id": 8, "name": "end_call_keyword"}, {"id": 63, "name": "transfer_to_human_agent"}],
+            "ai_plugin_functions": [{"id": 362}, {"id": 366}],
+        },
+    }
+    FLOW = [
+        {"id": "damage", "guidelines": {"end_call_keyword": False}},
+        {"id": "branches", "guidelines": {"plugin_functions": [{"id": 366, "instruction": ""}]}},
+    ]
+
+    def _run(self, body, **kwargs):
+        sent = []
+
+        def open_request(request, timeout):
+            sent.append(request)
+            if request.get_method() == "GET":
+                return FakeResponse(json.dumps(self.AGENT).encode())
+            return FakeResponse(b'{"status":"success","data":{"id":1}}')
+
+        with patch.dict(os.environ, {"INGFAH_API_KEY": "secret-key"}, clear=False), patch(
+            "scripts.ingfah_api.urllib.request.urlopen", open_request
+        ):
+            try:
+                ingfah_api.request("POST", "/client/agents/my-agent/revisions", body, confirm=True, **kwargs)
+                error = None
+            except ingfah_api.ClientError as caught:
+                error = str(caught)
+        return error, [(r.get_method(), r.full_url.rsplit("/client", 1)[1]) for r in sent]
+
+    def test_body_copied_from_revision_read_is_refused_before_posting(self):
+        # The revision read returns no tool lists, so this is exactly what a
+        # "read the revision, edit the prompt, post it back" body looks like.
+        error, sent = self._run({"name": "a", "ai_instruction_task": "t", "ai_instruction_flow": self.FLOW})
+        self.assertIn("phone_tools", error)
+        self.assertIn("ai_plugin_function_ids", error)
+        self.assertIn("[8, 63]", error)
+        self.assertIn("'branches'", error)
+        self.assertEqual(sent, [("GET", "/agents/my-agent")])
+
+    def test_dropping_a_bound_tool_is_refused(self):
+        error, sent = self._run({"phone_tools": [8], "ai_plugin_function_ids": [362, 366]})
+        self.assertIn("drops", error)
+        self.assertIn("[63]", error)
+        self.assertNotIn(("POST", "/agents/my-agent/revisions"), sent)
+
+    def test_flow_state_tool_must_be_bound(self):
+        error, _ = self._run(
+            {"phone_tools": [8, 63], "ai_plugin_function_ids": [362, 366, 1], "ai_instruction_flow": [
+                {"id": "lookup", "guidelines": {"plugin_functions": [{"id": 999}]}}
+            ]}
+        )
+        self.assertIn("'lookup'", error)
+        self.assertIn("[999]", error)
+
+    def test_body_carrying_every_bound_tool_is_sent(self):
+        error, sent = self._run(
+            {"phone_tools": [8, 63], "ai_plugin_function_ids": [362, 366, 400], "ai_instruction_flow": self.FLOW}
+        )
+        self.assertIsNone(error)
+        self.assertEqual(sent, [("GET", "/agents/my-agent"), ("POST", "/agents/my-agent/revisions")])
+
+    def test_allow_tool_drop_is_an_explicit_override(self):
+        error, sent = self._run({"phone_tools": []}, allow_tool_drop=True)
+        self.assertIsNone(error)
+        self.assertEqual(sent, [("POST", "/agents/my-agent/revisions")])
+
+    def test_text_agent_phone_tools_are_not_required(self):
+        self.AGENT = {"data": {"type": "text", "phone_tools": [], "ai_plugin_functions": [{"id": 5}]}}
+        error, _ = self._run({"ai_plugin_function_ids": [5]})
+        self.assertIsNone(error)
+
+
 if __name__ == "__main__":
     unittest.main()

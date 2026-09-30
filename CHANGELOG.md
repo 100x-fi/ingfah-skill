@@ -4,6 +4,37 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.3.0] — 2026-09-30
+
+### Fixed
+
+- Publishing a prompt edit could strip every tool from a live agent. A
+  revision stores only the tool ids it is sent, and
+  `GET /client/agents/{slug}/revisions/{id}` returns none, so a body rebuilt
+  from the revision read unbound the transfer and hang-up tools. The agent
+  then read `transfer_to_human_agent{}` aloud instead of transferring and
+  could not hang up. `scripts/ingfah_api.py` now reads the agent before
+  `POST /client/agents/{slug}/revisions` and refuses a body that omits
+  `phone_tools` or `ai_plugin_function_ids`, drops an id the published agent
+  uses, or has a flow state naming a tool that is not bound.
+  `--allow-tool-drop` overrides it when removing a tool is the intended
+  change.
+
+### Added
+
+- `references/agents-and-teams.md`: "Carry the tools into every revision",
+  covering where the ids are read from, the preview and post-publish checks, and
+  publishing by id when others edit the same agent.
+- `references/troubleshooting.md`: the "reads a tool name aloud / promises a
+  transfer that never happens / repeats its goodbye" complaint, in check order
+  (bindings, the call's tool messages, then the prompt).
+- `references/prompt-authoring.md`: "Tools in the prompt" (silent transfers,
+  never quote a forbidden output, keep the tool description and prompt
+  consistent), the `end_call_keyword` tool as a third requirement for
+  hanging up, and two pre-publish checks.
+- `references/tools.md`: a tool is callable only while bound, and a tool's
+  description is part of every turn.
+
 ## [1.2.0] — 2026-09-30
 
 ### Added

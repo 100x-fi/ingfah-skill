@@ -24,7 +24,7 @@ is in `references/`; **read the matching file before working in that area**:
 | Answer a question about Ingfah or how to use the dashboard | `references/user-guide/INDEX.md`, then the matching page |
 | Write, convert, or update an FAQ or knowledge file | `references/faq-authoring.md` |
 | Write or edit an agent's prompt | `references/prompt-authoring.md` — a prompt that bakes per-call data into its body is incorrect, not merely suboptimal |
-| Create or edit an agent, a revision, or an AI Agent Team | `references/agents-and-teams.md` |
+| Create or edit an agent, a revision, or an AI Agent Team | `references/agents-and-teams.md` — every revision must re-send the agent's tool ids, which the revision read does not return |
 | Create, pause, resume, or cancel an outbound batch | `references/outbound-batches.md` |
 | Read, write, or test-run a Tool | `references/tools.md` |
 | Design disposition outcomes or an outcome metadata schema | `references/outcome-design.md` |
@@ -127,6 +127,7 @@ missed:
 | Outcome label (ผลลัพธ์) is wrong, or everything is สรุปไม่ได้ | each outcome's `prompt` (criteria) in the `disposition` postprocessor |
 | A Metadata field is empty or badly formatted | that key's `description` in the `outcome_metadata` `json_schema` |
 | "I changed it but nothing changed" | changes apply to new calls only; check that the revision was **published** |
+| The agent reads a tool name aloud (`transfer_to_human_agent{}`), promises a transfer that never happens, or repeats its goodbye without hanging up | the agent's tool bindings (`GET /client/agents/{slug}` `phone_tools`) first; a revision posted without them unbinds every tool. Then the prompt around the tool |
 | Many outbound calls unanswered or busy | `GET /client/outbound/call-data-records` for the SIP reason, then the batch schedule |
 
 If you told the user earlier that something was not possible and a route
@@ -346,9 +347,18 @@ without opening one.
   team `transferabilities` replace what they are given rather than patching it.
   Read the current state, change only the fields being edited, and send the
   whole body.
+- **Never publish a revision that unbinds tools.** A revision stores only the
+  tool ids it is sent (`phone_tools`, `ai_plugin_function_ids`), and the
+  revision read does not return them. Copy them from `GET /client/agents/{slug}`
+  into every revision body, list them in the preview, and re-read the agent
+  after publishing. The script refuses a revision that would drop a bound
+  tool; `--allow-tool-drop` is only for removing a tool on purpose. Getting
+  this wrong leaves an agent that reads out
+  `transfer_to_human_agent{}` instead of transferring, and cannot hang up.
 - **Verify after writing.** Read the object back and report what was actually
   stored, not what the write response implied. `POST /client/agents` in
-  particular drops the prompt fields sent with it.
+  particular drops the prompt fields sent with it. For a revision, compare the
+  agent's `phone_tools` and `ai_plugin_functions` too, not only the prompt.
 - **Report state rules as state rules.** A `403` on visibility means the key's
   admin did not create the object; a `409` or `422` on delete means something
   still uses it. Neither is an authentication failure.

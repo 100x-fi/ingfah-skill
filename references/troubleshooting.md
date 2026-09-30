@@ -39,6 +39,7 @@ fix is dashboard-only, give the menu path instead.
 | The agent's voice | revision `voice_id` | AI Agent → แก้ไขแบบร่าง → เสียง | `GET /client/voices`, revisions |
 | Customer name, amount, or due date wrong or missing on a call | batch record data and template columns vs the prompt's variables | สายออก → จัดการเทมเพลต | outbound options, `customer-context-variables` |
 | Handoff to another agent, or none | team transferabilities and the agent flow | ทีม AI Agent → แก้ไข | `references/agents-and-teams.md` |
+| The agent says a tool's name aloud (`transfer_to_human_agent{}`), says it will transfer and does not, or repeats its goodbye without hanging up | first the agent's **tool bindings**, then the prompt around the tool | AI Agent → แก้ไขแบบร่าง → Tools | `GET /client/agents/{slug}` `phone_tools` / `ai_plugin_functions`; `references/agents-and-teams.md` |
 | A Tool not called, or failing | Tool description and parameters | Tool | `references/tools.md` |
 | Data not reaching their CRM, sheet, or webhook | Chat Automation | — | `references/automations.md` |
 | Missed or unanswered outbound calls | batch schedule and SIP result | สายออก → รายการ Batch → รายละเอียด Batch | `GET /client/outbound/call-data-records`, `references/outbound-batches.md` |
@@ -66,6 +67,38 @@ and what to put when the value is absent.
 **"The new setting didn't change anything."** Postprocessor, automation, and
 revision changes apply only to calls that start after them. For a revision,
 also check that it was **published**, not left as a draft.
+
+**"The AI read out `transfer_to_human_agent{}`", "it said it would transfer
+me but nothing happened", "it keeps saying goodbye but doesn't hang up."**
+Check in this order. Each step is one read.
+
+1. **Is the tool bound?** `GET /client/agents/{slug}` → `phone_tools` and
+   `ai_plugin_functions`. If the transfer tool or `end_call_keyword` is
+   missing, the last revision probably dropped it (a revision posted without
+   the tool lists stores none; see `references/agents-and-teams.md`). Compare
+   the revisions' `published_at` with when the complaints started. The fix is a new
+   revision that carries every id again, then publish and re-read.
+2. **Did the tool actually run on the call?** `GET /client/chat-sessions/{uuid}`:
+   a real transfer is a message with `role: tool`. Speech about transferring
+   with no tool message means it never ran. If step 1 is fine, the cause is
+   the prompt.
+3. **The prompt teaches the model to write the call as text.** The usual
+   causes, all seen together on one agent:
+   - a rule that *quotes* the forbidden output ("ห้ามพิมพ์
+     transfer_to_human_agent{}") — naming it primes it;
+   - "say one sentence, then call the tool", in the prompt or in the tool's
+     description;
+   - scripted `examples` that speak the transfer ("เดี๋ยวผมโอนสายให้
+     เจ้าหน้าที่นะครับ"), which the agent copies word for word and then follows
+     with the tool name as text.
+
+   The fix that worked (2/18 → 18/18 real transfers, measured on the production model) was a **silent
+   transfer**: the transfer turn calls the tool and says nothing (the tool's
+   hold message tells the caller to wait), with the quoting rule, the
+   spoken-transfer examples, and the "speak first" line in the tool
+   description all removed. Any instruction in that state that competes with
+   transferring, such as "send details on LINE", should be removed too. See
+   `references/prompt-authoring.md` → "Tools in the prompt".
 
 **"The AI mispronounces a word or number."** Fix it in the prompt using the
 say-as guidance in `references/user-guide/guides/ai-agent/say-as-pronunciation.md`.
