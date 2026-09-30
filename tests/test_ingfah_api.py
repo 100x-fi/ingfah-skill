@@ -111,10 +111,12 @@ class IngfahApiTests(unittest.TestCase):
 
     def test_undocumented_routes_are_rejected(self):
         with patch.dict(os.environ, {"INGFAH_API_KEY": "secret-key"}, clear=False):
+            # Dashboard-login (JWT-only) routes: an API key cannot reach them.
             for path in (
-                "/client/analytics/summary",
-                "/client/text-chats/conversations",
-                "/client/text-analytics/summary",
+                "/client/outbound/batches",
+                "/client/documents",
+                "/client/sip-number-configs",
+                "/client/chat-sessions/abc-123/disposition-outcomes",
             ):
                 with self.assertRaises(ingfah_api.ClientError):
                     ingfah_api.request("GET", path)
@@ -183,6 +185,33 @@ class IngfahApiTests(unittest.TestCase):
         # The collection takes no id, and an automation is not deleted by POST.
         self.assertFalse(ingfah_api._is_allowed("POST", "/client/products/227/automations/5"))
 
+
+    def test_reporting_and_text_chat_reads_are_allowed(self):
+        for path in (
+            "/client/analytics/summary",
+            "/client/analytics/report/download",
+            "/client/text-analytics/heatmap",
+            "/client/text-chats/conversations",
+            "/client/text-chats/conversations/abc-123",
+            "/client/text-chats/chat-sessions-list/csv",
+            "/client/text-channel-configs/4",
+            "/client/outbound/call-data-records",
+            "/client/voices",
+        ):
+            self.assertTrue(ingfah_api._is_allowed("GET", path), path)
+            self.assertFalse(ingfah_api._is_mutation("GET", path), path)
+        self.assertFalse(ingfah_api._is_allowed("GET", "/client/analytics/unknown"))
+        # Channel writes stay dashboard-only: they store messaging credentials.
+        self.assertFalse(ingfah_api._is_allowed("POST", "/client/text-channel-configs"))
+
+    def test_template_writes_and_publish_latest_need_confirmation(self):
+        for method, path in (
+            ("POST", "/client/outbound/options"),
+            ("PUT", "/client/outbound/options/5"),
+            ("DELETE", "/client/outbound/options/5"),
+            ("POST", "/client/agents/my-agent/publish"),
+        ):
+            self.assertTrue(ingfah_api._is_mutation(method, path), f"{method} {path}")
 
     def test_chat_session_recording_routes_are_allowed(self):
         for path in (

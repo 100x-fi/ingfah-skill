@@ -1,0 +1,92 @@
+# Fixing what the user sees
+
+Users report a symptom, not a setting: "the summary thinks we're a laundry",
+"it keeps saying สรุปไม่ได้", "the AI mispronounces our brand". Knowing which
+route exists is not enough. Work out **which setting produced what they see**,
+then propose the change to that setting.
+
+## How to consult
+
+1. **Restate the problem in their words** and ask for one or two example
+   calls (a time, a phone number, or a screenshot) when none were given.
+2. **Look before guessing.** Read the team (`GET /client/products/{id}`, which
+   includes its postprocessors), the agent's published revision, and the
+   example calls (`GET /client/chat-sessions/{uuid}`: transcript, title,
+   summary, outcome, metadata). Find what the setting is now, and whether a
+   setting is missing.
+3. **Name the cause in dashboard words.** For example: "ทีมช่วยเหลือลูกค้ามีแค่
+   ผลลัพธ์แบบสถานะ ยังไม่มีสรุปบทสนทนา (อัตโนมัติ) เลยใช้ตัวสรุปตั้งต้นที่ไม่รู้ว่า
+   ธุรกิจนี้คือร้านล้างรถ". If you said earlier that something could not be done
+   and it can, say so plainly.
+4. **Propose one concrete change** and show the exact text or JSON. Say what
+   it will fix, what it will not (settings apply to **new calls only**), and
+   where they will see the result. Offer to adjust the wording.
+5. **Ask for confirmation, then apply it, read it back, and suggest a test**
+   (ทดลอง → ตั้งค่าและทดลอง, or the next real call).
+
+When two settings could explain it, check the cheaper one first. When the
+fix is dashboard-only, give the menu path instead.
+
+## What the user sees → what produces it
+
+| What the user sees | Produced by | Dashboard | API |
+|---|---|---|---|
+| หัวข้อสนทนา (call title), Conversation Summary | `summary` postprocessor; the global default when the team has none | ทีม AI Agent → แก้ไข → ตั้งค่าผลลัพธ์หลังวางสาย | `postprocessors`, `references/postprocessors.md` |
+| ผลลัพธ์ (outcome label) | `disposition` postprocessor: outcome names and their criteria | same, tab ผลลัพธ์แบบสถานะ | same |
+| Metadata JSON, `outcome_metadata.*` CSV columns | `outcome_metadata` postprocessor: `json_schema` key descriptions | same, tab ผลลัพธ์แบบ metadata | same |
+| What the agent says, asks, skips, its tone | agent revision: greeting, identity, task, flow | AI Agent → แก้ไขแบบร่าง → เผยแพร่ | revisions, `references/prompt-authoring.md` |
+| Facts the agent answers with, or invents | knowledge files attached to the agent, and the prompt | คลังความรู้ (upload is dashboard-only) | `references/faq-authoring.md` |
+| The agent's voice | revision `voice_id` | AI Agent → แก้ไขแบบร่าง → เสียง | `GET /client/voices`, revisions |
+| Customer name, amount, or due date wrong or missing on a call | batch record data and template columns vs the prompt's variables | สายออก → จัดการเทมเพลต | outbound options, `customer-context-variables` |
+| Handoff to another agent, or none | team transferabilities and the agent flow | ทีม AI Agent → แก้ไข | `references/agents-and-teams.md` |
+| A Tool not called, or failing | Tool description and parameters | Tool | `references/tools.md` |
+| Data not reaching their CRM, sheet, or webhook | Chat Automation | — | `references/automations.md` |
+| Missed or unanswered outbound calls | batch schedule and SIP result | สายออก → รายการ Batch → รายละเอียด Batch | `GET /client/outbound/call-data-records`, `references/outbound-batches.md` |
+
+## Common complaints
+
+**"The summary or title is wrong, too generic, or misunderstands our
+business."** Check the team's postprocessors. With no `summary` type, add one
+whose `instruction` states the business, what ambiguous words mean there
+("เครื่อง" means the car-wash machine), and what the title must include
+(branch, order number). With one already, sharpen its instruction using the
+bad examples. Do not edit the agent's prompt for this; the summarizer does not
+read it. See `references/postprocessors.md`.
+
+**"Every call is labelled สรุปไม่ได้, or the label is wrong."** Read the
+transcripts of mislabelled calls against each outcome's criteria. Usually the
+criteria overlap, or none fits what customers actually say. Rewrite the
+criteria, add a missing outcome, or reorder by `rank`. See
+`references/outcome-design.md`.
+
+**"A metadata field is empty or in the wrong format."** The key's
+`description` in `json_schema` is what the extractor follows. Say the format
+and what to put when the value is absent.
+
+**"The new setting didn't change anything."** Postprocessor, automation, and
+revision changes apply only to calls that start after them. For a revision,
+also check that it was **published**, not left as a draft.
+
+**"The AI mispronounces a word or number."** Fix it in the prompt using the
+say-as guidance in `references/user-guide/guides/ai-agent/say-as-pronunciation.md`.
+
+**"The AI makes up prices or policies."** Put the facts in a knowledge file
+(`references/faq-authoring.md`) and tell the prompt to answer only from it.
+
+**"The AI said `{{name}}`, or used the wrong customer's details."** Compare
+the prompt's variables (`GET /client/ai-agent-teams/{id}/customer-context-variables`)
+with the template columns and the batch record. See `references/prompt-authoring.md`.
+
+**"Many outbound calls were never answered."** Read
+`GET /client/outbound/call-data-records?batch_id=...`. `sip_disposition` and
+`sip_hangup_cause` separate busy, no-answer, and invalid numbers from a
+schedule problem.
+
+**"Stop calling this customer."** A do-not-contact automation, or a new batch
+without them. See `references/automations.md`.
+
+**"How are we doing? Give me numbers."** Use the analytics routes (see
+`references/reporting.md`) rather than paging through every call.
+
+**"An old call has no recording or transcript."** Data retention, not a
+fault. See Call recordings in `SKILL.md`.

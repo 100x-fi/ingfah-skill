@@ -5,6 +5,43 @@ the transcript. A product's session config holds at most one postprocessor of
 each type (`disposition`, `summary`, `assessment`, `outcome_metadata`).
 Creating a second of the same type returns `409`.
 
+## What each type does, as the user sees it
+
+| `type` | Dashboard name | What it writes | Where the user sees it |
+|---|---|---|---|
+| `summary` | สรุปบทสนทนา (อัตโนมัติ) | the call's **title** and its **summary**, from one model call | หัวข้อสนทนา column on สายทั้งหมด / สายเข้า / สายออก; Conversation Summary on the call detail; `title` column in CSV exports |
+| `disposition` | ผลลัพธ์แบบสถานะ | one outcome label per call | ผลลัพธ์ column, dashboard charts, the batch record status |
+| `outcome_metadata` | ผลลัพธ์แบบ metadata (JSON) | structured fields extracted from the call | Metadata column (JSON); `outcome_metadata.<key>` CSV columns |
+| `assessment` | — | a score of the agent's performance | not shown on the main call lists |
+
+How the instruction is used: each type has a built-in default prompt, and the
+postprocessor's `instruction` is appended under it as an "Additional
+Instruction". So `instruction` is where business context goes. The default
+prompt knows nothing about the client's business, product names, jargon, or
+branches.
+
+**A team with no `summary` postprocessor still gets titles and summaries**,
+from a global default summarizer that has no business context. This is the
+usual cause of complaints like "the summary is wrong", "it thinks we are a
+laundry" or "the title never says the branch". The fix is to add a `summary`
+postprocessor to that team with an `instruction` that states what the business
+is, what ambiguous words mean there, and what the title and summary must
+include. Changing the agent's prompt does not change the summarizer.
+
+```json
+{
+  "type": "summary",
+  "instruction": "ธุรกิจนี้คือ <ชื่อธุรกิจ> <ประเภทธุรกิจ> ไม่ใช่ <สิ่งที่มักถูกเข้าใจผิด> เมื่อลูกค้าพูดถึง \"<คำกำกวม>\" ให้ถือว่าหมายถึง <ความหมายในธุรกิจนี้> ระบุ <ชื่อสาขา / เลขออเดอร์ / สิ่งที่ต้องเห็นในหัวข้อ> ในหัวข้อและสรุปทุกครั้งถ้ามี เขียนหัวข้อและสรุปเป็นภาษาไทย"
+}
+```
+
+Before proposing one, read the team with `GET /client/products/{id}` to see
+which types it already has (at most one per type), and read two or three
+recent calls with `GET /client/chat-sessions/{uuid}` so the instruction
+fixes what actually went wrong in them.
+
+## Reading and results
+
 - `GET /client/disposition-outcomes` returns the client-wide catalog of
   outcomes (`outcome`, `prompt`, `color`). It is a catalog only; it does not
   say which product uses which outcomes.

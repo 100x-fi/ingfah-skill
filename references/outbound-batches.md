@@ -81,3 +81,24 @@ reporting success:
 
 Error responses carry an `error_detail` field naming the offending field. Read
 it instead of guessing at the schema, and surface it to the user.
+
+## Customer templates (เทมเพลตข้อมูลลูกค้า)
+
+A template (outbound option) defines the columns every batch record carries.
+Writes need `client_outbound_options:write`.
+
+- `POST /client/outbound/options` takes `name` (at most 100 characters) and
+  `fields`, at least one of `{"column_name", "is_required", "example",
+  "auto_map_regex", "position"}`. `column_name` is at most 50 characters. A
+  batch matches each row's phone number against the field named
+  `phone_number`, so include it.
+- `PUT /client/outbound/options/{id}` **replaces the whole template, fields
+  included**. Read it first and send every field you mean to keep.
+- `DELETE /client/outbound/options/{id}` returns `409` while a team uses the
+  template as its default; the response lists those teams.
+- Column names should match the agent prompt's variables, or the agent says
+  the variable name instead of the customer's value. Compare with
+  `GET /client/ai-agent-teams/{id}/customer-context-variables`.
+
+Copying a template, and the upload wizard's header mapping and validation,
+stay dashboard-only (สายออก → จัดการเทมเพลต / สร้าง Batch).

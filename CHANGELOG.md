@@ -4,6 +4,38 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.2.0] — 2026-09-30
+
+### Added
+
+- `references/troubleshooting.md` and a "When the user reports a problem"
+  section in `SKILL.md`: they map what a user sees in the dashboard (a call
+  title or summary, an outcome label, metadata, what the agent says, missed
+  calls) to the setting that produces it, and describe how to consult before
+  proposing a fix.
+- `references/postprocessors.md` now explains what each post-call result type
+  writes and where it shows up. It also notes that a `summary` postprocessor
+  sets both the call title and the summary, and that a team without one falls
+  back to a global default with no business context.
+- Newly allowlisted API-key routes, confirmed against the backend router:
+  - analytics (`analytics:read`): `/client/analytics/*` and
+    `/client/text-analytics/*`, including the XLSX report download
+  - text chats (`chat_sessions:read`): `/client/text-chats/conversations`
+    and `/client/text-chats/chat-sessions-list` (plus CSV)
+  - text channels (`client_products:read`): `/client/text-channel-configs`
+    and the provider catalog, read only
+  - customer templates (`client_outbound_options:write`): create, update,
+    and delete `/client/outbound/options`
+  - `GET /client/outbound/call-data-records`, for per-attempt SIP results
+  - `GET /client/voices` and `POST /client/agents/{slug}/publish`
+- `references/reporting.md` documents the analytics, text chat, and
+  call-attempt routes.
+
+### Changed
+
+- Creating, editing, and deleting a customer template is no longer listed as
+  dashboard-only. Only copying a template still is.
+
 ## [1.1.0] — 2026-09-30
 
 ### Added
@@ -53,6 +85,7 @@ First versioned release.
   moved from `SKILL.md` into `references/`, so less loads on every use.
 - Install and update through the `skills` CLI; MIT license.
 
+[1.2.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.2.0
 [1.1.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.1.0
 [1.0.2]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.0.2
 [1.0.1]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.0.1

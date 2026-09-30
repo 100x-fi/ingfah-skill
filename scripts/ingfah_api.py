@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 DEFAULT_BASE_URL = "https://api.ingfah.ai"
 API_KEY_ENV = "INGFAH_API_KEY"
@@ -36,7 +36,10 @@ ROUTE_PATTERNS = (
     ("POST", re.compile(r"^/client/products/[^/]+/postprocessors$")),
     ("PUT", re.compile(r"^/client/products/[^/]+/postprocessors/[^/]+$")),
     ("DELETE", re.compile(r"^/client/products/[^/]+/postprocessors/[^/]+$")),
-    ("GET", re.compile(r"^/client/(ai-agents|agent-templates|phone-tools)$")),
+    ("GET", re.compile(r"^/client/(text-channel-config-providers|text-channel-configs)$")),
+    ("GET", re.compile(r"^/client/text-channel-configs/[^/]+$")),
+    ("GET", re.compile(r"^/client/text-chats/channel-configs(?:/[^/]+)?$")),
+    ("GET", re.compile(r"^/client/(ai-agents|agent-templates|phone-tools|voices)$")),
     ("GET", re.compile(r"^/client/plugin-function-integrations$")),
     ("GET", re.compile(r"^/client/plugin-functions(?:/[^/]+)?$")),
     ("POST", re.compile(r"^/client/plugin-functions$")),
@@ -50,12 +53,22 @@ ROUTE_PATTERNS = (
     ("PUT", re.compile(r"^/client/agents/[^/]+/(profile|description|visibility)$")),
     ("POST", re.compile(r"^/client/agents/[^/]+/revisions$")),
     ("POST", re.compile(r"^/client/agents/[^/]+/revisions/[^/]+/publish$")),
+    ("POST", re.compile(r"^/client/agents/[^/]+/publish$")),
     ("DELETE", re.compile(r"^/client/agents/[^/]+/revisions/[^/]+$")),
     ("GET", re.compile(r"^/client/chat-sessions(?:/[^/]+)?$")),
     ("GET", re.compile(r"^/client/chat-sessions/[^/]+/record(?:/(download|checksum))?$")),
     ("GET", re.compile(r"^/client/chat-sessions-list(?:/csv)?$")),
     ("GET", re.compile(r"^/client/agents/[^/]+/chat-session-tests(?:/[^/]+)?$")),
+    ("GET", re.compile(r"^/client/text-chats/chat-sessions-list(?:/csv)?$")),
+    ("GET", re.compile(r"^/client/text-chats/conversations(?:/[^/]+)?$")),
+    ("GET", re.compile(r"^/client/analytics/(summary|short-calls|hourly-charts|duration-histogram|heatmap|speech-ratio)$")),
+    ("GET", re.compile(r"^/client/analytics/report/download$")),
+    ("GET", re.compile(r"^/client/text-analytics/(summary|messages-hourly|heatmap)$")),
     ("GET", re.compile(r"^/client/outbound/options(?:/[^/]+)?$")),
+    ("POST", re.compile(r"^/client/outbound/options$")),
+    ("PUT", re.compile(r"^/client/outbound/options/[^/]+$")),
+    ("DELETE", re.compile(r"^/client/outbound/options/[^/]+$")),
+    ("GET", re.compile(r"^/client/outbound/call-data-records$")),
     ("GET", re.compile(r"^/client/outbound/batches/[^/]+$")),
     ("GET", re.compile(r"^/client/outbound/batches/[^/]+/records$")),
     ("GET", re.compile(r"^/client/outbound/batches/[^/]+/records/download$")),

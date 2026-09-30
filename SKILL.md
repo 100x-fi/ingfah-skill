@@ -1,6 +1,6 @@
 ---
 name: ingfah
-description: Answer questions about Ingfah (อิงฟ้า) from its bundled user guide (คู่มือ), write FAQ files for its knowledge base (คลังความรู้), and work with the Ingfah client platform through client API-key authenticated APIs. Use when the user asks anything about Ingfah — services, how to do something in the dashboard, telephony, onboarding, settings, billing, release notes — wants an FAQ or knowledge document for an AI Agent, or asks to inspect or manage products, AI agents, chat sessions, tools, or outbound batches, including in the dashboard's English or Thai words: AI Agent Team / ทีม AI Agent, batch / Batch โทรออก, calls / สายทั้งหมด, chats / แชท, templates / เทมเพลตข้อมูลลูกค้า, tools / Tool, knowledge / คลังความรู้, post-call results / ผลลัพธ์หลังวางสาย. Do not use backoffice APIs or JWT-only client APIs.
+description: Answer questions about Ingfah (อิงฟ้า) from its bundled user guide (คู่มือ), write FAQ files for its knowledge base (คลังความรู้), and work with the Ingfah client platform through client API-key authenticated APIs. Use when the user asks anything about Ingfah — services, how to do something in the dashboard, telephony, onboarding, settings, billing, release notes — wants an FAQ or knowledge document for an AI Agent, asks to inspect or manage products, AI agents, chat sessions, tools, customer templates, outbound batches, or analytics, or reports something wrong in what they see (a bad call summary or title, wrong outcome labels, an agent saying the wrong thing, missed calls) and wants it fixed, including in the dashboard's English or Thai words: AI Agent Team / ทีม AI Agent, batch / Batch โทรออก, calls / สายทั้งหมด, chats / แชท, templates / เทมเพลตข้อมูลลูกค้า, tools / Tool, knowledge / คลังความรู้, post-call results / ผลลัพธ์หลังวางสาย. Do not use backoffice APIs or JWT-only client APIs.
 ---
 
 # Ingfah
@@ -31,6 +31,9 @@ is in `references/`; **read the matching file before working in that area**:
 | Create or edit a postprocessor | `references/postprocessors.md` |
 | Set up a Chat Automation (webhook, do-not-contact) | `references/automations.md` |
 | Translate a field name the user reads in the dashboard | `references/dashboard-terms.md` |
+| The user complains about something they see (a wrong summary, label, answer, or voice; missed calls) | `references/troubleshooting.md` |
+| Analytics, text chat inbox, channels, or why outbound calls failed | `references/reporting.md` |
+| Create, edit, or delete a customer template | `references/outbound-batches.md` |
 
 ## Answering questions about Ingfah
 
@@ -108,6 +111,27 @@ the batch and record status words — are in `references/dashboard-terms.md`.
 Most users are not developers. They know the dashboard, not the API, so the
 work should end where they can see it.
 
+### When the user reports a problem
+
+Users describe what they see, not which setting to change. Before saying
+something cannot be done, **trace what they see back to the setting that
+produces it**, then consult: look at the current setting and a few example
+calls, name the cause in dashboard words, propose one concrete change with
+its exact text, and apply it only after they confirm. The full map and the
+common complaints are in `references/troubleshooting.md`. The ones most often
+missed:
+
+| What they see | Change this, not the agent's prompt |
+|---|---|
+| Call title (หัวข้อสนทนา) or summary is wrong, generic, or misreads the business | the team's `summary` postprocessor `instruction`. With none, the team uses a global default that knows nothing about the business, so add one. |
+| Outcome label (ผลลัพธ์) is wrong, or everything is สรุปไม่ได้ | each outcome's `prompt` (criteria) in the `disposition` postprocessor |
+| A Metadata field is empty or badly formatted | that key's `description` in the `outcome_metadata` `json_schema` |
+| "I changed it but nothing changed" | changes apply to new calls only; check that the revision was **published** |
+| Many outbound calls unanswered or busy | `GET /client/outbound/call-data-records` for the SIP reason, then the batch schedule |
+
+If you told the user earlier that something was not possible and a route
+exists for it, correct yourself plainly.
+
 - **Point to where the change shows up.** After a write, name the dashboard
   page the user can open to check it — e.g. "ทีม AI Agent → เปิดทีม →
   ตั้งค่าผลลัพธ์หลังวางสาย" for a postprocessor, or the **Metadata** column on
@@ -143,11 +167,13 @@ Collect these first, and ask for whatever is missing rather than inventing it:
 | Create, rename, or delete an API key | การตั้งค่า → API Keys |
 | Assign a phone number to an inbound team | เบอร์โทรศัพท์ → ⋮ → แก้ไข → ทีมรับสายเข้า |
 | Upload knowledge files | คลังความรู้ → อัปโหลด; attach in the agent → แก้ไขแบบร่าง → คลังความรู้ icon → บันทึกแบบร่าง |
-| Create, copy, or delete a customer template | สายออก → จัดการเทมเพลต |
+| Copy a customer template (create, edit, and delete work through the API) | สายออก → จัดการเทมเพลต |
 | Upload a batch from a CSV file | สายออก → สร้าง Batch |
 | Make a test call or chat | the agent → ทดลอง → ตั้งค่าและทดลอง |
 | Add a cloned voice | a service requested from the Ingfah team |
 | Data retention, billing, activity logs, guest access | การตั้งค่า — **Owner** only |
+| Add or edit a text channel (LINE, Facebook, …) | การตั้งค่า → Channels — **Owner** only |
+| Mute the bot, reply as a human, or reassign a chat | แชท |
 
 Knowledge files must be `.pdf`, `.docx`, `.txt`, or `.md`, and must reach
 **พร้อมใช้งาน** before they are attached; FAQ files work best as `.md` or
@@ -198,6 +224,10 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `GET /client/products`
 - `GET /client/products/{id}`
 - `GET /client/products/{id}/automations`
+- `GET /client/text-channel-configs`
+- `GET /client/text-channel-configs/{id}`
+- `GET /client/text-channel-config-providers`
+- `GET /client/text-chats/channel-configs`, `/providers`, `/{id}` (same data as the three above)
 
 ### `client_products:write`
 
@@ -223,6 +253,7 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `GET /client/plugin-functions`
 - `GET /client/plugin-functions/{id}`
 - `GET /client/plugin-function-integrations`
+- `GET /client/voices`
 
 ### `ai_agents:write`
 
@@ -233,6 +264,7 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `PUT /client/agents/{slug}/visibility`
 - `POST /client/agents/{slug}/revisions`
 - `POST /client/agents/{slug}/revisions/{id}/publish`
+- `POST /client/agents/{slug}/publish` (publishes the newest revision; prefer the route above, which fails if someone drafted after you)
 - `DELETE /client/agents/{slug}/revisions/{id}`
 - `POST /client/plugin-functions`
 - `PUT /client/plugin-functions/{id}`
@@ -251,17 +283,41 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `GET /client/chat-sessions-list/csv`
 - `GET /client/agents/{slug}/chat-session-tests`
 - `GET /client/agents/{slug}/chat-session-tests/{uuid}`
+- `GET /client/text-chats/conversations`
+- `GET /client/text-chats/conversations/{uuid}`
+- `GET /client/text-chats/chat-sessions-list`
+- `GET /client/text-chats/chat-sessions-list/csv`
+
+### `analytics:read`
+
+- `GET /client/analytics/summary`
+- `GET /client/analytics/short-calls`
+- `GET /client/analytics/hourly-charts`
+- `GET /client/analytics/duration-histogram`
+- `GET /client/analytics/heatmap`
+- `GET /client/analytics/speech-ratio`
+- `GET /client/analytics/report/download` (XLSX; use `--output`)
+- `GET /client/text-analytics/summary`
+- `GET /client/text-analytics/messages-hourly`
+- `GET /client/text-analytics/heatmap`
 
 ### `client_outbound_options:read`
 
 - `GET /client/outbound/options`
 - `GET /client/outbound/options/{id}`
 
+### `client_outbound_options:write`
+
+- `POST /client/outbound/options`
+- `PUT /client/outbound/options/{id}`
+- `DELETE /client/outbound/options/{id}`
+
 ### `client_outbound_batches:read`
 
 - `GET /client/outbound/batches/{id}`
 - `GET /client/outbound/batches/{id}/records`
 - `GET /client/outbound/batches/{id}/records/download`
+- `GET /client/outbound/call-data-records`
 
 ### `client_outbound_batches:write`
 
