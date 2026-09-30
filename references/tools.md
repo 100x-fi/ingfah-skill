@@ -75,7 +75,14 @@ source on 2026-09-30:
   passed this year rolls forward to next year and is flagged. When a past date
   is not acceptable (a payment promise, a booking), make the prompt check
   `days_from_today` and ask again when it is negative, or beyond the allowed
-  window.
+  window. Keep that check to one simple comparison and test it: on long calls
+  the model misjudged `days_from_today: 4` against a five-day window in both
+  directions. When the window rule is business-critical, a custom tool that
+  returns the decision itself (`within_window: true`) is more reliable than
+  asking the model to compare.
+- **Send the day and the time together.** A bare time ("เที่ยง") returns
+  `invalid`, which costs a turn and can then be taken as "that time is not
+  available". "พรุ่งนี้ เที่ยง" resolves the day and ignores the time.
 - **`is_business_day` only checks for Saturday and Sunday.** It knows no
   public holidays; do not tell a customer a holiday is a working day on its
   strength.
@@ -88,6 +95,32 @@ call**, and the spoken date only its output: "1. เรียก resolve_date �
 the date" with the tool as a side note gets the date stated without the tool.
 Do not put a concrete invented date in a ❌ example either; the agent repeats
 it. Describe the mistake instead.
+
+### Writing a tool the model will call correctly
+
+- **A tool that asks the customer something must say so in its description.**
+  A keypad-collection tool described as if it looked something up was never
+  called: the agent asked out loud instead (0/10). "Calling this tool is how
+  the caller is asked; it does not read anything entered earlier" made it fire
+  10/10 with the prompt unchanged. Make that step tool-only, with no spoken
+  lead-in, the same as a transfer, including on retries.
+- **Say what a lookup searches by.** With a lookup that works by phone number
+  only, the agent invented searches by other details and reported "not
+  found". State the key it takes and that other details are for staff.
+- **Don't confirm before the work is done.** After only a contact lookup, one
+  agent told the caller their case was recorded. Make "look up" and "create"
+  two ordered steps, with the early confirmation as a ❌.
+- **Return spoken forms and decisions, not raw values.** The model compares
+  numbers, picks among similar dates, and spells out computed numbers
+  unreliably. A tool result with a ready-to-speak string and a yes/no decision
+  removes all three failure points.
+- **Handle the failure result.** With no rule for a failed transfer, the agent
+  goes silent and the caller hears dead air. Say what to do: tell the caller
+  the staff member is not available, and offer a callback or one more try. On
+  the callback path, wait for the whole number and read it back before closing.
+- **Keep exception lists out of descriptions.** A search tool's description
+  listing brands the agent "does not need to search for" stopped it searching
+  for exactly those, even on specific questions.
 
 ### A tool's description is part of every prompt
 

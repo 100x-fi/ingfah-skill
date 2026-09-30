@@ -1,0 +1,13 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "transfer_to_human_agent",
+      "description": "โอนสายให้เจ้าหน้าที่ที่เป็นคนจริง เรียกเมื่อลูกค้าขอคุยกับพนักงาน เรียกอย่างเดียวโดยไม่พูดอะไร ระบบจะบอกลูกค้าให้รอสายเอง",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  }
+]

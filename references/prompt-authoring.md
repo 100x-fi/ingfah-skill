@@ -57,7 +57,18 @@ re-introduces itself on its first turn, every time. The first state's job is to
 *react* to whatever the customer said in reply.
 
 Keep the greeting to one or two sentences: who is calling, why, and a single
-permission question.
+permission question. It is spoken in full before the customer can answer, so
+length costs real calls: many failed calls are the greeting, one reply, and a
+hang-up, which no prompt change can reach.
+
+- **The greeting is rendered on its own.** It cannot see a `{% set %}` made
+  in the task, so repeat any derivation it needs (a name fallback, say)
+  inside the greeting itself.
+- **When copying a prompt from another agent**, check the greeting's particles
+  against the new identity's gender, and remove examples from the other
+  business.
+- **Customer-context names are case-sensitive.** `{{customerContext.First_Name}}`
+  and `first_name` are different fields; a wrong case renders as nothing.
 
 ## Conversation flow
 
@@ -81,7 +92,10 @@ Rules that keep a flow working:
   transition against the set of ids before sending; a dangling `next_step` is
   a dead end that silently strands the call.
 - `examples` are verbatim scripts — they constrain what the speech sounds
-  like. Give one or two per state, not a paragraph.
+  like. Give one or two per state, not a paragraph. **Each example must be a
+  single line**: an entry containing a line break can stop the platform
+  rendering the flow, and the whole `ai_instruction_flow` then reaches the
+  model as raw JSON. `instructions` may run to several lines.
 - `instructions` carry the logic and may be long. One state, one job.
 - Every flow ends in a terminal state with no transitions and
   `end_call_keyword: true`. Every path must be able to reach it. See **Ending
@@ -303,6 +317,11 @@ Without the check, a format change renders nonsense such as "วันพฤห�
 - **Never put a tag inside a spoken example.** `examples` are verbatim scripts;
   a template tag that survives into one gets read aloud. Put the conditional
   around the instruction instead.
+- **Gate a capability on business hours, and fail closed.** Branch on
+  `{{hour}}`, and when it is missing or unreadable behave as out of hours (offer
+  a callback). Gate every place the capability is scripted, not only the
+  rules section: every state and example that offers a transfer. Naming the
+  gated tool anywhere outside the gate brings the behaviour back.
 - **Do not template the flow structure.** State ids and transitions are data,
   not text — branch inside `instructions`, never across state boundaries.
 
@@ -339,6 +358,21 @@ Rules:
 - Tags belong in `examples` and in `instructions` that dictate wording. A value
   arriving from customer context still needs the tag around the reference, e.g.
   `<say-as type="thai_money">{{customerContext.outstanding_amount}}</say-as>`.
+
+### Numbers the agent works out
+
+- **Output computed numbers as digits inside a say-as tag.** Spelling a
+  just-calculated number in Thai produced typos (`เก้ารร้อยเจ็ดสิบ`) 3/3; digits
+  in `<say-as type="thai_money">` removed the failure.
+- **Use a calculator tool for prices** (`calculate_product_cart`,
+  `calculate_remaining`) rather than a price table plus arithmetic. If a table
+  must stay, keep its rows bare, drop zero components, and add one worked
+  example per combination that fails. When a table covers only some values,
+  the agent borrows the nearest row for the rest; a ❌/✅ pair with the exact
+  failing input stopped that where "don't guess" did not.
+- **Scope a pronunciation rule to its data type.** "Read the digits one by
+  one" for licence plates spread to opening hours. Say what it applies to and
+  what it does not ("ไม่เกี่ยวกับการอ่านตัวเลขอื่น เช่น เวลา").
 
 ### Everything else spoken
 
@@ -403,6 +437,23 @@ find sections; the ban on markdown applies only to what the agent says.
   short choice can map common mishearings, e.g. ไซ / ไส / สี่ → 4. Always
   scope it — `(ใช้เฉพาะขั้นตอนนี้เท่านั้น)` — or the agent applies it
   everywhere and turns a plain ค่ะ into a 5.
+- **Codes mixing letters and digits get misheard as digits** (เจ → 4), so a
+  correct readback can look wrong; one agent repeated a correction nine times.
+  Accept when the parts that came through match, cap corrections at two
+  (counting the agent's), and never tell the customer they said it wrong.
+- **Never echo a misheard phrase back.** Asking "หมายถึง <the garbled words>
+  ใช่ไหม" confuses the customer; by the third try, guess from the topics the
+  prompt lists, and offer a different guess if the first is rejected.
+- **Make the agent say the limit out loud.** "Retry once" still got third
+  attempts. A retry line that says "ครั้งสุดท้าย" aloud held, because a third ask
+  would contradict the agent's own last turn. Conditions tied to the call so
+  far ("you have already asked them to repeat in this call") hold better than
+  counters.
+- **Keep neighbouring ladders apart.** A silence ladder and an unclear-audio
+  ladder with the same first/second/third shape swapped lines. Give each its
+  own vocabulary (one owns สัญญาณ, the other never uses it) and an exact final
+  line, decide from this turn's input rather than the last ladder used, and
+  say which ladder wins when both could apply.
 - **Rotate lines that repeat.** For a question asked several times in a call,
   such as มีคำถามเพิ่มเติมไหมคะ, give at least three `examples` and instruct the
   state to alternate. Forbid repeating the previous turn word for word; the
@@ -418,6 +469,11 @@ find sections; the ban on markdown applies only to what the agent says.
   refusal, or three distinct attempts one turn each (answer the objection → a
   limited offer → a final offer), with a single attempt when the obstacle
   cannot be solved, such as not eligible or outside the service area.
+- **A persuasion ladder needs an example per attempt and a loop back.** "Handle
+  up to three refusals" in prose collapsed to one. Numbered scripts per attempt,
+  each a different angle, plus a transition "refused, fewer than 3 attempts →
+  this same state", held. To add variety to a working ladder, add alternatives
+  beside each line rather than rewording it.
 - **Cap re-asking.** If the answer does not fit, ask once more in different
   words; after that use a stated default and confirm it. A customer asking
   what the question means counts as the second ask.
@@ -475,8 +531,77 @@ script loses to the script.
 - **Pin single-answer facts where they are written.** If an answer is the same
   for everyone, say so on that fact — "ใช้เอกสารชุดเดียวกันทุกกลุ่ม ตอบได้ทันที
   ไม่ต้องถามกลุ่มก่อน" — or the agent asks a sorting question before answering.
+- **Concrete values in examples are spoken as real data.** A sample phone
+  number or ID digits in a ✅ example were read to real callers as their own.
+  Use `{{customerContext.*}}` slots, never literals. A format demo far from its
+  rule is recited as written; next to its rule, it is adapted to the real
+  value. Bracket directives such as `[หลักที่ 10][หลักที่ 11]` are read aloud and
+  teach nothing.
+- **Examples teach everything in them, setup included.** One example in which
+  the customer said the policy had lapsed and the agent carried on selling
+  taught the agent to carry on (0% → 88%). A word in an example question
+  (สะดวก) pulled calls into callback scheduling. To stop a habit such as
+  ending every answer with a question, a run of consecutive examples that each
+  end cleanly worked where prose and a ❌/✅ pair did not.
 - **Name the topic in a clarifying question.** "เรื่องบัตรที่หายใช่ไหมคะ" rather
   than "หมายถึงเรื่องอะไรคะ": the customer knows they were heard.
+
+### Branches and fallbacks
+
+- **Keep "clear but unexpected" out of the "didn't understand" bucket.** A
+  state with branch A, branch B, and "otherwise: didn't understand" also sends
+  clear answers there — a question back, "I already said", a hello. Give it two
+  fallbacks: garbled audio keeps the audio ladder; a clear off-branch answer is
+  acknowledged, answered (or plainly not known), and the call returns to the
+  goal from a new angle, dropping that question after two tries. Never say
+  "ไม่เข้าใจ" to something that was heard clearly. On one campaign 24% of
+  calls had a "didn't understand" turn and those converted at half the rate.
+- **A rule that rejects a value also needs one that accepts.** When the only
+  time script is a rejection ("after 17:00 is out of hours"), it becomes the
+  handler for every time, and the agent turned down noon. Add an explicit
+  accept branch; for spoken values, a list of accepted spoken forms beats a
+  numeric comparison, and name look-alikes (เที่ยงคืน vs เที่ยง) in the reject
+  list.
+- **Give the general fallback its own concrete line.** When the only concrete
+  "เจ้าหน้าที่จะติดต่อกลับ" line belongs to one case, it is used for every gap.
+  Add a generic no-information line with ❌/✅ pairs from the questions that
+  went wrong, and scope the narrow line to its case (0/4 → 15/15).
+- **Every verification question needs its own mismatch branch**: confirm back
+  once, then move on whether or not it matches, without revealing the right
+  value. A global "never re-ask" rule is not enough.
+- **Fix routing where the decision is made.** When an answer sends the call
+  to the wrong state, fix the routing state; hardening the wrong state's exit
+  leaks into its siblings. A new topic routes reliably only once the first
+  state's routing rule names it.
+- **Don't ask for what a branch will not use.** Asking for a detail only one
+  branch uses pulls calls into that branch; removing the question fixed a
+  premature transfer that prose and examples could not.
+- **Trigger a step on the data, not on a step the agent may skip.** "After the
+  customer confirms the address readback" never fires when the readback is
+  skipped; trigger on "address complete" instead.
+- **Prohibitions are read as absolute.** "Don't do X in this turn" becomes
+  "never do X": say what happens next instead. "ห้ามเรียกเครื่องมือใดๆ" written
+  with the transfer in mind also blocks `resolve_date`: name the tool. A broad
+  "don't offer options not listed" above the flow can suppress an offer the
+  flow grants: say what it does not cover.
+- **Resolve contradictions by scoping, not by adding text.** Two overlapping
+  rules ("second hesitation → escalate", "second refusal → end") are fixed by
+  scoping each. Gate the close on the "anything else?" step: a more detailed
+  closing script moved earlier in the call, and a customer's ขอบคุณ was taken as
+  a cue to hang up.
+- **Illustrate a rule with a stable topic.** A topic used as the example for
+  "can't answer → transfer" in several places became that rule's trigger, and
+  every place had to change when its policy did.
+
+### Content that must be said
+
+For a consent line, an amount disclosure, a disclaimer or a closing script,
+list the exact must-say points, and tell the agent to judge completeness by
+what it actually said, not by whether the sentence felt finished. When the
+customer cuts in with a new topic, finish the missing content first, then
+answer, and put any hang-up line last. A question asked in the middle of an
+offer is neither acceptance nor refusal and must not move the call on. Give
+each must-say point its own ❌/✅ pair.
 
 ### How scripted to make it
 
@@ -525,6 +650,18 @@ Escalate in this order:
   thinking out loud. Say this in the prompt and in the tool's description.
   Without it, the agent can talk over the human it just handed the call to;
   in the worst case seen, it spoke its internal reasoning into a live call.
+- **To ask for silence, allow a tiny line.** "Reply with nothing" alone has
+  produced spoken reasoning or a literal placeholder such as `<blank/>`.
+  "Reply either with nothing or with just สวัสดีค่ะ" holds. Write the rule
+  positively, and never write a placeholder token in the prompt.
+- **Wording that looks like a function call gets spoken as one.** Describing a
+  knowledge lookup as a bracketed "Query" template made the agent speak
+  tool-call markup as its whole turn, with no such tool bound. Describe
+  criteria to weigh silently instead.
+- **Never ask the agent to summarise or log the call.** A "summarise the call"
+  section got its summary spoken into a live call once a transfer turn went
+  silent, and prose could not stop it; deleting the section did. The post-call
+  results (`references/postprocessors.md`) already do this job.
 - **One instruction per tool, in one place.** The tool's `description` travels
   with every turn (`references/tools.md`); if the prompt and the description
   disagree, change them together.
@@ -536,9 +673,29 @@ Escalate in this order:
 
 Attaching a knowledge file is not enough; the prompt must say when and how to
 search it. Name the file, tell the agent to **search again on every question**
-rather than reuse the last result, say which terms make a good query (a model
-or brand name), which result fields to use, and how many results to present —
-usually the first only. Tell it to speak results naturally, not as a list.
+rather than reuse the last result, say which terms make a good query, which
+result fields to use, and how many results to present — usually the first
+only. Tell it to speak results naturally, not as a list.
+
+- **Query with the caller's words.** A product model or plan name that tells
+  entries apart helps. The company's own name does not: in a single-company
+  knowledge base it matches everything, and prefixing it to every query
+  measurably lowered retrieval. Search again once with a topic word only when
+  the question is too short to match anything.
+- **A fact in the prompt stops the search.** When a fact lives in both the
+  prompt and the knowledge file, the agent answers from the prompt and skips
+  the search, and once one turn answers without searching, later turns copy
+  that. On one agent 84% of questions were searched in short calls but only
+  24% in a long one. Keep facts that belong in the knowledge base out of the
+  prompt, and write ✅ examples as "search, then answer from the result", never
+  as a full answer the agent can repeat.
+- **Allow "no information" only after two searches in that turn.** That one
+  rule raised the per-question search rate from 60% to 87% and removed false
+  "ไม่มีข้อมูล" answers; a ❌/✅ "search again" example alone barely moved it.
+- **Put a search check as the last block of the task**: "ก่อนตอบคำถาม
+  ข้อมูล ตานี้ค้นคลังความรู้แล้วหรือยัง". At the end of the task it raised the
+  search rate from about 55% to 67%; the same words inside the knowledge
+  section did nothing.
 
 ## Before publishing
 
@@ -571,7 +728,23 @@ Test calls (ทดลอง → ตั้งค่าและทดลอง) a
 
 - **Re-test the main paths, not only the edited state.** Adding or rewording
   text in one state can change behaviour in an unrelated one, and the same
-  text can break different things depending on where it is placed.
+  text can break different things depending on where it is placed. Tendencies
+  seen on this model, not laws:
+  - put new text next to the content it relates to, and keep a state-specific
+    exception inside that state; exceptions added to the task summary shift
+    decisions across the whole call;
+  - a rule added to the identity field had outsized side effects that the same
+    rule in the task did not;
+  - appending to the end of a section, or extending an existing bullet, was the
+    safest kind of edit;
+  - try moving new text before cutting it down.
+- **State each rule once.** The same rule written in two places read as a
+  general strategy and made a different tool misfire; deleting the duplicate
+  fixed it. Measure before cutting a repetition that may be holding something
+  in place.
+- **Don't write a rule for behaviour that already works.** An explicit rule
+  for something the agent already did regressed other paths (13/14 → 10/14).
+  Confirm the current behaviour on test calls first.
 - **Any greeting edit affects every call.** The greeting opens every
   conversation, so even one changed word can shift later turns. Re-test the
   whole call after touching it.

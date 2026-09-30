@@ -4,6 +4,52 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.5.0] — 2026-09-30
+
+### Added
+
+- Lessons from tuning live agents, written without client specifics:
+  - `prompt-authoring.md`: branches and fallbacks (clear-but-unexpected answers,
+    accept branches, a general no-information line, per-question mismatch
+    branches, routing fixes, absolute-reading prohibitions, scoping
+    contradictions), content that must be said despite interruptions,
+    mishearing (letter/digit codes, no echo, saying the limit aloud, separate
+    ladders), persuasion ladders, knowledge-base search (query wording, facts
+    that suppress search, the two-search rule, a search check at the end of the
+    task), one-line flow examples, the greeting's own rendering, concrete values
+    in examples, asking for silence, no in-call summaries, computed numbers in
+    say-as, price tables, scoped pronunciation rules, business-hours gates that
+    fail closed, and where to place new text
+  - `tools.md`: tools that ask the customer something, lookup keys, failed
+    transfers, returning decisions instead of raw values, exception lists in
+    descriptions, sending the day and time together to `resolve_date`, and a
+    caveat on model-side `days_from_today` comparisons
+  - `agents-and-teams.md`: splitting one agent into a team
+  - `outcome-design.md`: the labels that go wrong most, and schema pitfalls
+    (integer enums, stored field order, tool results visible to post-call
+    steps but not webhooks)
+  - `postprocessors.md`, `faq-authoring.md`, `troubleshooting.md`: instruction
+    wording, fixing a repeatedly wrong entry, greeting hang-ups, and cut-off
+    numbers from malformed say-as tags
+
+### Changed
+
+- The knowledge-base query guidance no longer suggests adding a brand name to
+  queries; the company's own name measurably lowers retrieval.
+
+- `references/testing.md` and `templates/promptfoo-suite/`: how to set up an
+  automated conversation test suite for an agent with promptfoo. The template
+  exports the agent and its tools through the client API, composes the prompt
+  in the platform's order, plays whole conversations on the production model
+  (`google/gemma-4-26b-a4b-it`, temperature 0.5, 768 output tokens), and tests
+  the disposition outcomes on `google/gemini-3.1-flash-lite`. It includes
+  reusable assertions (tool fired, silence after a transfer, no tool name
+  spoken, spoken-Thai digit matching), a fictional example agent to check the
+  setup, token and cost reporting, and guidance on keys, cost, what to test,
+  and how to write assertions that survive run-to-run variation. Verified end
+  to end: 8 conversations × 3 repeats and 4 disposition cases passing, with
+  assertions confirmed to fail when their behaviour breaks.
+
 ## [1.4.0] — 2026-09-30
 
 ### Added

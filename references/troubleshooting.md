@@ -100,6 +100,17 @@ Check in this order. Each step is one read.
    transferring, such as "send details on LINE", should be removed too. See
    `references/prompt-authoring.md` → "Tools in the prompt".
 
+**"Customers hang up straight away."** Read a few: when the call is the
+greeting, one reply, and a hang-up, the model never ran again and no prompt
+change reaches it. The lever is the greeting's length (a 300-character
+greeting took about 26 seconds to speak) and the short-calls analytics
+(`references/reporting.md`).
+
+**"The AI stops mid-sentence where a number should be."** say-as tags are
+removed before the transcript is saved, so a transcript never shows them. A
+sentence cut off exactly at a number points to a malformed tag in the prompt,
+such as `<say-astype=...>`; search the prompt for `say-as` and check each.
+
 **"The AI mispronounces a word or number."** Fix it in the prompt using the
 say-as guidance in `references/user-guide/guides/ai-agent/say-as-pronunciation.md`.
 

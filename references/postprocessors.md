@@ -55,6 +55,14 @@ fixes what actually went wrong in them.
   `GET /client/chat-sessions-list/csv` flattens the latter into
   `outcome_metadata.<key>` columns.
 
+## Writing the instruction
+
+Keep a postprocessor's `instruction` to detection rules applied to the
+transcript: the business context, what words mean, what to look for. A
+sentence describing what the team lacks ("this team has no transfer, so these
+fields are usually false") broke that field and unrelated ones. A ❌/✅ pair in
+an instruction has side effects too; test it (`references/testing.md`).
+
 ## Writing a postprocessor
 
 `POST /client/products/{id}/postprocessors` takes `type`, `instruction`, and

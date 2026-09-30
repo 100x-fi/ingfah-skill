@@ -1,0 +1,32 @@
+description: 'Conversation tests for the AI Agent in agent.json'
+
+# One test = one whole conversation. The prompt string is only a label;
+# agent-provider.js builds the real system prompt from agent.json.
+prompts:
+  - 'thread {{threadId}}'
+
+providers:
+  - id: file://agent-provider.js
+    config:
+      apiBaseUrl: '{{ env.OPENROUTER_BASE_URL }}'
+      model: '{{ env.AGENT_MODEL }}'
+      apiKeyEnvar: OPENROUTER_API_KEY
+      agentFile: agent.json
+      toolsFile: tools.json
+      # Production-like sampling for the voice agent. Keep it, and repeat runs
+      # (npm run test:repeat) rather than lowering it to hide variation.
+      temperature: 0.5
+      max_tokens: 768
+
+# Checks that apply to every conversation.
+defaultTest:
+  assert:
+    - type: javascript
+      value: file://asserts.js:noToolText
+    - type: javascript
+      value: file://asserts.js:noVerbatimRepeat
+
+evaluateOptions:
+  maxConcurrency: 4
+
+tests: file://threads.js

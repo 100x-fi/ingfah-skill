@@ -169,6 +169,12 @@ Then point to the dashboard steps, which have no client API route:
 Fix 4 to 6 entries at a time and retest the whole file: any edit moves chunk
 boundaries and can change results for other entries.
 
+## When search keeps returning the wrong entry
+
+If questions about Y keep retrieving entry X, add Y's key fact to X, answer
+first. That fixed misses where prompt examples did nothing (0/3 → 3/3, twice).
+Re-test other questions afterwards: any edit re-chunks the whole file.
+
 ## Updating an existing FAQ
 
 When a new source version arrives, re-apply the tuning — restatement lines,

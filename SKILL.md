@@ -28,6 +28,7 @@ is in `references/`; **read the matching file before working in that area**:
 | Create, pause, resume, or cancel an outbound batch | `references/outbound-batches.md` |
 | Read, write, or test-run a Tool | `references/tools.md` |
 | Design disposition outcomes or an outcome metadata schema | `references/outcome-design.md` |
+| Set up automated tests for an agent, or run them before publishing | `references/testing.md`, with the template in `templates/promptfoo-suite/`. The user supplies a model API key and each run costs money |
 | Create or edit a postprocessor | `references/postprocessors.md` |
 | Set up a Chat Automation (webhook, do-not-contact) | `references/automations.md` |
 | Translate a field name the user reads in the dashboard | `references/dashboard-terms.md` |
@@ -146,6 +147,8 @@ exists for it, correct yourself plainly.
   varies between calls, so one test call proves little: suggest the same
   scenario two or three times, the main paths as well as the edited one, and
   the go-live checklist in `references/prompt-authoring.md` → "Testing a change".
+  For an agent that will be edited more than once, also offer an automated
+  test suite (`references/testing.md`).
 - **Say when something is dashboard-only.** Some tasks have no client API
   route. Give the user the path in the table below instead of trying another
   endpoint.

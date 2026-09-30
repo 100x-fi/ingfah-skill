@@ -42,6 +42,20 @@ instruction.
 The instruction should end by fixing the response shape, e.g.
 `{"outcome":"...","reason":"..."}` with a short reason in the call's language.
 
+### Labels that go wrong most
+
+- **Label from the customer's own words, and their latest stance wins.** A
+  bare ครับ / ค่ะ is an acknowledgement, not agreement: on one team about 16%
+  of success labels rested on nothing more.
+- **Have a "not the intended customer" outcome, and require clear evidence
+  for it.** A bare "ไม่ใช่" answering some other question, or garbled audio, is
+  not a denial of identity.
+- **Include call-screening assistants in the voicemail definition.**
+- **"Busy now, call later" is not an appointment**, and ranks above
+  "interested".
+- When two outcomes both look right for real calls, tighten the rival's
+  criteria so one wins, rather than adding a tie-break sentence.
+
 ## Outcome metadata
 
 `json_schema` is a wrapper: `{"name": ..., "description": ..., "schema": {...}}`
@@ -70,6 +84,24 @@ Design rules:
   different reasons and follow-up depends on which; give the status its own
   enum field when it matters.
 - Keep a short free-text `notes` field for facts only, explicitly no opinions.
+
+### Schema pitfalls
+
+- **No `enum` on integer fields.** An integer field with `"enum": [1, 2, 3]`
+  made the post-call model return empty objects; the platform rejects that
+  output, so the metadata stays empty with no visible error. Use `minimum` /
+  `maximum` for integers; string enums are fine.
+- **Field order is set by the stored schema, not by how you wrote it.** Read
+  the postprocessor back after saving: properties have come back re-sorted
+  (by name length, then alphabetically), and the extractor fills fields in
+  that order. A verdict that must follow its evidence needs a longer name
+  than the evidence fields; a short reasoning field (`why`) comes first.
+- **The extractor sees tool results; webhooks do not.** The transcript given
+  to the post-call steps includes each tool call and its full result
+  (keypad-entered IDs included), so instructions may rely on them. A webhook
+  cannot read tool results, so a value collected by a tool reaches a CRM only
+  through an outcome metadata field that copies it — which then holds personal
+  data.
 
 ## Constraints to remember
 

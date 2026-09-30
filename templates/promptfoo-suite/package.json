@@ -1,0 +1,16 @@
+{
+  "name": "ingfah-agent-tests",
+  "private": true,
+  "description": "Automated conversation tests for an Ingfah AI Agent (promptfoo)",
+  "scripts": {
+    "tools": "node build-tools.js",
+    "test": "promptfoo eval -c promptfooconfig.yaml --env-file .env --no-cache",
+    "test:repeat": "promptfoo eval -c promptfooconfig.yaml --env-file .env --no-cache --repeat 3",
+    "test:disposition": "promptfoo eval -c disposition/promptfooconfig.yaml --env-file .env --no-cache",
+    "view": "promptfoo view"
+  },
+  "devDependencies": {
+    "nunjucks": "^3.2.4",
+    "promptfoo": "^0.123.1"
+  }
+}

@@ -1,0 +1,28 @@
+description: 'Post-call disposition (ผลลัพธ์แบบสถานะ) tests'
+
+prompts:
+  - file://prompt.js
+
+providers:
+  - id: 'openai:chat:{{ env.DISPOSITION_MODEL }}'
+    config:
+      apiBaseUrl: '{{ env.OPENROUTER_BASE_URL }}'
+      apiKeyEnvar: OPENROUTER_API_KEY
+      temperature: 0
+      response_format: { type: json_object }
+
+# Must be defaultTest.assert: a bare top-level `assert:` is silently ignored
+# and every test then passes with no check run.
+defaultTest:
+  assert:
+    - type: javascript
+      value: |
+        const text = typeof output === 'string' ? output : JSON.stringify(output ?? '');
+        const m = text.match(/\{[\s\S]*\}/);
+        let got = null;
+        try { got = m ? JSON.parse(m[0]).outcome : null; } catch (e) {}
+        return got === context.vars.expectedOutcome
+          ? true
+          : { pass: false, score: 0, reason: `expected "${context.vars.expectedOutcome}", got "${got}" | ${text.slice(0, 200)}` };
+
+tests: file://cases.js

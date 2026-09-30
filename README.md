@@ -56,6 +56,8 @@ will change, wait for a yes, send it, then read it back.
 | `references/postprocessors.md` | Post-call results: summary, disposition, and outcome metadata |
 | `references/outcome-design.md` | How to design disposition outcomes and an outcome metadata schema |
 | `references/automations.md` | Chat Automation: webhooks and do-not-contact |
+| `references/testing.md` | Automated conversation and disposition tests with promptfoo |
+| `templates/promptfoo-suite/` | The test-suite template `references/testing.md` sets up |
 | `references/dashboard-terms.md` | Field-level English and Thai dashboard names |
 | `references/troubleshooting.md` | Mapping what a user sees to the setting that produces it, and how to consult on a fix |
 | `references/reporting.md` | Analytics, the text chat inbox and channels, and outbound call attempts |
