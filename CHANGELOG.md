@@ -4,6 +4,31 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.4.0] — 2026-09-30
+
+### Added
+
+- `references/prompt-authoring.md`:
+  - where the template engine (gonja v2.9.0) differs from Python Jinja, as a
+    table of traps that fail silently, probed on the production version
+  - how to parse `{{now}}` safely (its current shape, the non-breaking-space
+    history, a validity check with a fallback), and a preference for `{{hour}}`
+    and the other dedicated variables
+  - computing derived values onto `customerContext` so the body stays
+    cacheable
+  - the 1024-character limit on `ai_instruction_identity`
+  - silence after a successful transfer
+  - "Scripted lines are copied, so scope them" and "How scripted to make it"
+    (controlled variety as the default, with the measured cost of going fully
+    free-form)
+  - "Testing a change": re-test beyond the edited state, treat greeting edits
+    as affecting every call, repeat a scenario before concluding, and a go-live
+    checklist of guardrail and complaint cases
+- `references/tools.md`: what `resolve_date` understands and returns, checked
+  against the platform source: the phrase coverage, `thai_readback`, the two
+  meanings of `needs_confirmation`, past dates, weekend-only `is_business_day`,
+  and how to order the instruction.
+
 ## [1.3.0] — 2026-09-30
 
 ### Fixed

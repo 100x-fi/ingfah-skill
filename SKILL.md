@@ -23,7 +23,7 @@ is in `references/`; **read the matching file before working in that area**:
 |---|---|
 | Answer a question about Ingfah or how to use the dashboard | `references/user-guide/INDEX.md`, then the matching page |
 | Write, convert, or update an FAQ or knowledge file | `references/faq-authoring.md` |
-| Write or edit an agent's prompt | `references/prompt-authoring.md` — a prompt that bakes per-call data into its body is incorrect, not merely suboptimal |
+| Write or edit an agent's prompt | `references/prompt-authoring.md` — a prompt that bakes per-call data into its body is incorrect, not merely suboptimal. Its Jinja section lists engine traps that fail silently, and "Testing a change" has the go-live checklist |
 | Create or edit an agent, a revision, or an AI Agent Team | `references/agents-and-teams.md` — every revision must re-send the agent's tool ids, which the revision read does not return |
 | Create, pause, resume, or cancel an outbound batch | `references/outbound-batches.md` |
 | Read, write, or test-run a Tool | `references/tools.md` |
@@ -137,12 +137,15 @@ exists for it, correct yourself plainly.
   page the user can open to check it — e.g. "ทีม AI Agent → เปิดทีม →
   ตั้งค่าผลลัพธ์หลังวางสาย" for a postprocessor, or the **Metadata** column on
   สายทั้งหมด for extracted results.
-- **Suggest a test before going live.** After drafting or publishing an agent,
+- **Suggest a test before going live, and more than one run.** After drafting or publishing an agent,
   tell the user to open the agent, pick **แบบร่าง** or **เผยแพร่**, and use the
   arrow beside **ทดลอง** → **ตั้งค่าและทดลอง**. Test calls are free and use no
   real phone line. Choosing the job type **รับสาย** there shows every variable,
   so customer context can be filled in by hand. Their transcripts are then
-  readable with `GET /client/agents/{slug}/chat-session-tests`.
+  readable with `GET /client/agents/{slug}/chat-session-tests`. The agent
+  varies between calls, so one test call proves little: suggest the same
+  scenario two or three times, the main paths as well as the edited one, and
+  the go-live checklist in `references/prompt-authoring.md` → "Testing a change".
 - **Say when something is dashboard-only.** Some tasks have no client API
   route. Give the user the path in the table below instead of trying another
   endpoint.

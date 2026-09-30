@@ -42,6 +42,53 @@ takes a date from the customer — a payment promise, a callback, a booking —
 should have `resolve_date` enabled, and its prompt should call it every time
 the customer names a relative day.
 
+### What `resolve_date` understands and returns
+
+It takes `date_text` (the customer's words) and an optional `calendar`
+(`be` or `ce`), and works in Asia/Bangkok time. Checked against the platform
+source on 2026-09-30:
+
+- **It understands:** explicit dates in either order with any month spelling
+  (`15 กรกฎาคม 2569`, `1 กุมภา 36`, `ส.ค.`, `เดือนธันวาคม วันที่ 5`); relative days
+  (`วันนี้`, `พรุ่งนี้`, `มะรืน`, `เมื่อวาน`, `เมื่อวานซืน`) and chains of them
+  (`มะรืนของเมื่อวาน`); weeks (`สัปดาห์หน้า`, `วันจันทร์สัปดาห์หน้า`, `อาทิตย์หน้า`);
+  months (`เดือนหน้า`, `วันที่ 15 เดือนหน้า`, `สิ้นเดือน`, `ต้นเดือนกรกฎาคม`); counts
+  (`อีก 3 วัน`, `อีก 2 สัปดาห์`, `อีก 3 เดือน`, `3 เดือนก่อน`); a bare `วันที่ 15`; and
+  weekdays (`พุธหน้า`, `จันทร์นี้`, `วันเสาร์`). Anything else returns `invalid`,
+  so the prompt still needs an "if the tool cannot read it, ask the customer
+  for the date again" branch.
+- **It returns** `resolved_date` (Gregorian), `resolved_date_be`,
+  `thai_readback`, `days_from_today`, `is_business_day`, `needs_confirmation`,
+  and `alternate_date` / `alternate_date_be` / `alternate_thai_readback`.
+- **`thai_readback` is the line to speak**, and it already contains the weekday
+  and พ.ศ. (`วันพุธที่ 30 กันยายน พ.ศ. 2569`). Tell the agent to say it as
+  returned rather than compose its own date.
+- **`needs_confirmation` means two different things:**
+  - with `alternate_date` set, the phrase is genuinely ambiguous — a bare
+    `วันเสาร์` is this Saturday or the next — so the agent asks the customer to
+    choose between the two readbacks;
+  - with `alternate_date` null, the tool filled in a month or year itself
+    (`วันที่ 15`, `15 มีนาคม`), so the agent just reads the date back for the
+    customer to confirm.
+- **Past dates are returned as past.** `เมื่อวาน`, `3 เดือนก่อน`, and `พฤหัสนี้`
+  said on a Friday all name days that have gone. A date with no year that has
+  passed this year rolls forward to next year and is flagged. When a past date
+  is not acceptable (a payment promise, a booking), make the prompt check
+  `days_from_today` and ask again when it is negative, or beyond the allowed
+  window.
+- **`is_business_day` only checks for Saturday and Sunday.** It knows no
+  public holidays; do not tell a customer a holiday is a working day on its
+  strength.
+- **It works in whole days only.** Whether a time today has already passed is
+  a prompt-side comparison with `{{hour}}`.
+
+**Write the instruction as an ordered sequence whose first step is the tool
+call**, and the spoken date only its output: "1. เรียก resolve_date ด้วยคำพูดของ
+ลูกค้า 2. อ่าน thai_readback ตามที่ได้ 3. ถามยืนยัน". An instruction that says "state
+the date" with the tool as a side note gets the date stated without the tool.
+Do not put a concrete invented date in a ❌ example either; the agent repeats
+it. Describe the mistake instead.
+
 ### A tool's description is part of every prompt
 
 The `description` of every bound tool is sent with every turn, not only when
