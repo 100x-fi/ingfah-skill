@@ -4,11 +4,18 @@
 [![skills.sh](https://img.shields.io/badge/skills.sh-ingfah-black)](https://skills.sh/100x-fi/ingfah-skill/ingfah)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-An agent skill, named `ingfah`, for working with the [Ingfah](https://ingfah.ai)
-client API using a client API key. It lets a coding agent such as Claude Code
-inspect and manage AI Agent Teams, AI agents and their revisions, Tools, calls
-and chats, outbound batches, post-call results, and Chat Automation — in
-English or Thai, using the dashboard's own words.
+An agent skill, named `ingfah`, for working with [Ingfah](https://ingfah.ai).
+It lets a coding agent such as Claude Code:
+
+- **answer questions about Ingfah** from a bundled copy of the Thai user guide
+  (คู่มือ, [docs.ingfah.ai](https://docs.ingfah.ai)) — no API key needed;
+- **write FAQ files for the knowledge base** (คลังความรู้) in the format that
+  searches best, and check them before upload — no API key needed;
+- **use the client API** with a client API key to inspect and manage AI Agent
+  Teams, AI agents and their revisions, Tools, calls and chats, outbound
+  batches, post-call results, and Chat Automation.
+
+All of it works in English or Thai, using the dashboard's own words.
 
 The skill restricts the agent to a documented allowlist of client API routes,
 requires explicit confirmation before anything is created, changed, or deleted,
@@ -38,6 +45,10 @@ will change, wait for a yes, send it, then read it back.
 |---|---|
 | `SKILL.md` | The skill itself: routes, scopes, naming, and the rules that apply to every task |
 | `scripts/ingfah_api.py` | Dependency-free request script; enforces the allowlist and the confirmation gate |
+| `scripts/faq_lint.py` | Checks an FAQ file before upload and simulates how the knowledge base chunks it |
+| `scripts/sync_user_guide.py` | Regenerates `references/user-guide/` from the docs repository |
+| `references/user-guide/` | The Thai user guide, one file per page, with `INDEX.md` |
+| `references/faq-authoring.md` | Writing, converting, and updating knowledge-base FAQ files |
 | `references/agents-and-teams.md` | Creating and editing agents, revisions, and AI Agent Teams |
 | `references/prompt-authoring.md` | How to write an agent's identity, task, and conversation flow |
 | `references/outbound-batches.md` | Creating and controlling outbound batches |
@@ -46,7 +57,7 @@ will change, wait for a yes, send it, then read it back.
 | `references/outcome-design.md` | How to design disposition outcomes and an outcome metadata schema |
 | `references/automations.md` | Chat Automation: webhooks and do-not-contact |
 | `references/dashboard-terms.md` | Field-level English and Thai dashboard names |
-| `tests/` | Unit tests for the script |
+| `tests/` | Unit tests for the scripts |
 
 The agent reads `SKILL.md` every time the skill is used, and opens a reference
 file only when the task needs it.
@@ -106,7 +117,7 @@ HTTPS.
 
 ```bash
 cd ~/src/ingfah-skill
-python3 -m unittest tests.test_ingfah_api          # 21 tests, no network
+python3 -m unittest tests.test_ingfah_api tests.test_faq_lint tests.test_sync_user_guide   # no network
 INGFAH_API_KEY='sk-ing-...' python3 scripts/ingfah_api.py GET /client/products
 ```
 
@@ -158,6 +169,19 @@ session.
 
 For a git clone, use `git -C ~/src/ingfah-skill pull --ff-only -q || true` as
 the hook command instead.
+
+## Refreshing the user guide
+
+`references/user-guide/` is generated from the
+[ingfah-public-docs](https://github.com/100x-fi/ingfah-public-docs)
+repository. After the docs change, regenerate and commit it:
+
+```bash
+python3 scripts/sync_user_guide.py --source ../ingfah-public-docs
+```
+
+`INDEX.md` records the docs commit it was copied from. Do not edit the copied
+pages by hand; fix them in the docs repository instead.
 
 ## Contributing
 

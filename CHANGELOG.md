@@ -4,6 +4,22 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.1.0] — 2026-09-30
+
+### Added
+
+- The skill now answers questions about Ingfah from a bundled copy of the
+  public Thai user guide (คู่มือ, https://docs.ingfah.ai) in
+  `references/user-guide/`, with an `INDEX.md` of every page. No API key is
+  needed for questions.
+- `scripts/sync_user_guide.py` regenerates that copy from the docs repository.
+- `references/faq-authoring.md`: a workflow for writing, converting, and
+  updating FAQ files for the knowledge base (คลังความรู้), grounded in how the
+  knowledge base reads and chunks a file.
+- `scripts/faq_lint.py` checks an FAQ file before upload and simulates where
+  its chunks split, flagging answer lines that would be retrieved without
+  their question. `--compare` catches tuning lost in an update.
+
 ## [1.0.2] — 2026-09-23
 
 ### Changed
@@ -37,6 +53,7 @@ First versioned release.
   moved from `SKILL.md` into `references/`, so less loads on every use.
 - Install and update through the `skills` CLI; MIT license.
 
+[1.1.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.1.0
 [1.0.2]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.0.2
 [1.0.1]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.0.1
 [1.0.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.0.0

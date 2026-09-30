@@ -1,11 +1,18 @@
 ---
 name: ingfah
-description: Interact with the Ingfah client platform through client API-key authenticated APIs. Use this skill when the user asks to inspect or manage Ingfah products, AI agents, chat sessions, tools, or outbound batches — including when they use the dashboard's own words in English or Thai, such as AI Agent Team / ทีม AI Agent, batch / Batch โทรออก, calls / สายทั้งหมด, chats / แชท, templates / เทมเพลตข้อมูลลูกค้า, tools / Tool, or post-call results / ผลลัพธ์หลังวางสาย. Do not use backoffice APIs or JWT-only client APIs.
+description: Answer questions about Ingfah (อิงฟ้า) from its bundled user guide (คู่มือ), write FAQ files for its knowledge base (คลังความรู้), and work with the Ingfah client platform through client API-key authenticated APIs. Use when the user asks anything about Ingfah — services, how to do something in the dashboard, telephony, onboarding, settings, billing, release notes — wants an FAQ or knowledge document for an AI Agent, or asks to inspect or manage products, AI agents, chat sessions, tools, or outbound batches, including in the dashboard's English or Thai words: AI Agent Team / ทีม AI Agent, batch / Batch โทรออก, calls / สายทั้งหมด, chats / แชท, templates / เทมเพลตข้อมูลลูกค้า, tools / Tool, knowledge / คลังความรู้, post-call results / ผลลัพธ์หลังวางสาย. Do not use backoffice APIs or JWT-only client APIs.
 ---
 
-# Ingfah client API
+# Ingfah
 
-Use the user's Ingfah client API key to call only the client API routes listed below.
+This skill does three things:
+
+1. **Answers questions about Ingfah** from the bundled user guide — see
+   "Answering questions about Ingfah" below. No API key needed.
+2. **Writes FAQ files for the knowledge base** (คลังความรู้) — read
+   `references/faq-authoring.md` first. No API key needed.
+3. **Calls the Ingfah client API** with the user's client API key, using only
+   the routes listed below.
 
 The default Ingfah API base URL is `https://api.ingfah.ai`. Use another base URL only when the user explicitly provides one.
 
@@ -14,6 +21,8 @@ is in `references/`; **read the matching file before working in that area**:
 
 | Task | Read first |
 |---|---|
+| Answer a question about Ingfah or how to use the dashboard | `references/user-guide/INDEX.md`, then the matching page |
+| Write, convert, or update an FAQ or knowledge file | `references/faq-authoring.md` |
 | Write or edit an agent's prompt | `references/prompt-authoring.md` — a prompt that bakes per-call data into its body is incorrect, not merely suboptimal |
 | Create or edit an agent, a revision, or an AI Agent Team | `references/agents-and-teams.md` |
 | Create, pause, resume, or cancel an outbound batch | `references/outbound-batches.md` |
@@ -22,6 +31,39 @@ is in `references/`; **read the matching file before working in that area**:
 | Create or edit a postprocessor | `references/postprocessors.md` |
 | Set up a Chat Automation (webhook, do-not-contact) | `references/automations.md` |
 | Translate a field name the user reads in the dashboard | `references/dashboard-terms.md` |
+
+## Answering questions about Ingfah
+
+`references/user-guide/` is a copy of the public Thai user guide
+(https://docs.ingfah.ai), one Markdown file per page: overview and services,
+plans and standards, onboarding, telephony (IP Peering, SIP Registration),
+every dashboard guide (AI Agent, Flow, prompting, Tools, knowledge base,
+inbound and outbound, results, all calls, settings), and the release notes.
+
+- **Find the page, then read it.** Start from `INDEX.md`, which lists every
+  page with its description. For a specific term, search the folder, e.g.
+  `grep -ril "say-as" references/user-guide`. Read the whole page before
+  answering; steps and caveats are often in a later section or a `:::caution`.
+- **Answer only from the guide** (and the other references in this skill).
+  Do not fill gaps from general knowledge about voice AI, other products, or
+  guesses about pricing, limits, or timelines. When the guide does not cover
+  it, say so and suggest asking the Ingfah team.
+- **Answer in the user's language**, in the dashboard's words. The guide is
+  in Thai; for English speakers translate, and give the Thai menu name the
+  first time (e.g. Knowledge — คลังความรู้) since the dashboard shows Thai.
+- **Link the page.** End with the public URL from the page's `Source:` line
+  so the user can see the screenshots, which are not copied here.
+- **Give steps as menu paths**, e.g. ทีม AI Agent → เปิดทีม → ตั้งค่าผลลัพธ์หลังวางสาย.
+- **"What's new" or "when did X ship"** — read `release-notes.md`.
+- **Offer to do it.** When the answer is a task the client API can perform
+  (the routes below), offer to do it for the user; when it is
+  dashboard-only, say so (see "Dashboard-only tasks").
+
+For how the platform behaves through the API — field names, state rules,
+request bodies — the other `references/` files are more precise than the
+guide, which describes the dashboard.
+
+## Client API
 
 Use `scripts/ingfah_api.py` for every request. It is dependency-free and enforces the route allowlist and the mutation confirmation rule. Do not substitute `curl`, `requests`, or an ad-hoc script, even if asked to for speed: doing so bypasses both guardrails, and requests without the script's `User-Agent` header are rejected by Cloudflare with a 403 error-1010.
 
@@ -108,7 +150,8 @@ Collect these first, and ask for whatever is missing rather than inventing it:
 | Data retention, billing, activity logs, guest access | การตั้งค่า — **Owner** only |
 
 Knowledge files must be `.pdf`, `.docx`, `.txt`, or `.md`, and must reach
-**พร้อมใช้งาน** before they are attached. A batch CSV must be at most 25 MB,
+**พร้อมใช้งาน** before they are attached; FAQ files work best as `.md` or
+`.txt` written per `references/faq-authoring.md`. A batch CSV must be at most 25 MB,
 with column names matching its template.
 
 A missing phone number on เบอร์โทรศัพท์ or on batch creation means no line is
