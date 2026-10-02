@@ -172,22 +172,15 @@ Beyond creation it can be read, updated, made public or private, and deleted.
   keeps the conversation so far.
 - Split work across agents rather than overloading one: a first agent that
   asks the language or the topic, then transfers to a specialist with its own
-  knowledge. When splitting an existing agent into a team:
-  - **copy the global rules into every agent.** One split dropped the
-    anti-repetition rule and the mishearing ladder from the specialists, and
-    that caused half of the next reported defects;
-  - **give each receiving agent a "taking over a call in progress" section**,
-    or it reads the handoff as its own transfer and apologises or defers;
-  - an agent that should act before speaking works best when its first turn is
-    tool-only;
-  - put "skip what the customer already gave" inside the collection steps
-    themselves, not in a separate rules section;
-  - **give each agent every transfer destination its callers may need.** With
-    one transfer tool and a rule "transfer when asked for a human", every such
-    caller goes to that one destination. The order tools are listed in also
-    steers the choice: listing the right default first fixed a routing case a
-    ❌/✅ pair did not. Each agent's `vocal_name` is how the others refer to it when
-  transferring.
+  knowledge and tools. **Before designing, building, or changing a team with
+  more than one agent, read `references/multi-agent-teams.md`**: when to
+  split, how the handoff tools are named (`transfer_to_<target slug>`), the
+  two handoff modes, the sections every receiving agent's prompt needs, how
+  to test each edge, and the go-live checklist.
+- `transferabilities` is the list of edges, one entry per direction:
+  `{from_agent_id, to_agent_id, transfer_tool_description}`. Every agent on an
+  edge must have a published revision, or the update is refused. Each agent's
+  `vocal_name` is how the handoff tool describes it to the other agents.
 - An inbound team takes calls only once a phone number is assigned to it,
   which is done in the dashboard (see **Dashboard-only tasks** in `SKILL.md`).
 

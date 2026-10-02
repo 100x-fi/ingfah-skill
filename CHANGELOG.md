@@ -4,6 +4,31 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.6.0] — 2026-10-02
+
+### Added
+
+- `references/multi-agent-teams.md`: building a production team of agents
+  that hand one call between them, from a four-agent helpline tuned on its
+  first two days of real calls. It covers when to split (and giving an
+  agent only the tools its job needs), how the platform runs a team (edges,
+  handoff tools named `transfer_to_<target slug>`, who joins the call, tools
+  staying per agent, the prompt rendered once at call start), the default
+  and seamless handoff modes, the router/specialist line and return paths,
+  the "taking over a call in progress" section every receiving agent needs,
+  tool-only handoff turns, post-call results and automations across agents,
+  the API steps, testing each agent and edge with the promptfoo template, a
+  go-live checklist, and what to watch on the first real calls.
+- What an API key cannot do for a team: create phone tools, set the handoff
+  mode (an API-created team starts in default mode), or choose an agent's
+  slug, so prompts naming handoff tools are written after the shells exist.
+
+### Changed
+
+- `agents-and-teams.md`, `testing.md`, `troubleshooting.md`, and the
+  `SKILL.md` task table point to the new file; the team-splitting tips moved
+  there.
+
 ## [1.5.1] — 2026-10-02
 
 ### Fixed
@@ -195,6 +220,7 @@ First versioned release.
   moved from `SKILL.md` into `references/`, so less loads on every use.
 - Install and update through the `skills` CLI; MIT license.
 
+[1.6.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.6.0
 [1.5.1]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.5.1
 [1.2.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.2.0
 [1.1.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.1.0

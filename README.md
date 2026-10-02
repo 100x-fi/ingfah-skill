@@ -50,6 +50,7 @@ will change, wait for a yes, send it, then read it back.
 | `references/user-guide/` | The Thai user guide, one file per page, with `INDEX.md` |
 | `references/faq-authoring.md` | Writing, converting, and updating knowledge-base FAQ files |
 | `references/agents-and-teams.md` | Creating and editing agents, revisions, and AI Agent Teams |
+| `references/multi-agent-teams.md` | Designing, building, testing, and launching a team of agents that hand calls between them |
 | `references/prompt-authoring.md` | How to write an agent's identity, task, and conversation flow |
 | `references/outbound-batches.md` | Creating and controlling outbound batches, and customer templates |
 | `references/tools.md` | Phone tools and plugin functions |

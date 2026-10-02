@@ -254,6 +254,11 @@ the right answer and against the wrong one at the failing turn. Replace names,
 phone numbers, ID numbers and addresses with placeholders before saving a
 real call into the suite.
 
+**A team of several agents**
+Set up one suite per agent, add the handoff tools to `tools.json` by hand,
+and replay the earlier agent's part of the call to test a specialist's first
+turn. See `references/multi-agent-teams.md` → "Testing a team".
+
 ## Disposition and outcome metadata tests
 
 `disposition/` checks the team's outcome labels (ผลลัพธ์แบบสถานะ) against

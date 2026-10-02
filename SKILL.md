@@ -25,6 +25,7 @@ is in `references/`; **read the matching file before working in that area**:
 | Write, convert, or update an FAQ or knowledge file | `references/faq-authoring.md` |
 | Write or edit an agent's prompt | `references/prompt-authoring.md` — a prompt that bakes per-call data into its body is incorrect, not merely suboptimal. Its Jinja section lists engine traps that fail silently, and "Testing a change" has the go-live checklist |
 | Create or edit an agent, a revision, or an AI Agent Team | `references/agents-and-teams.md` — every revision must re-send the agent's tool ids, which the revision read does not return |
+| Design, build, or change a team of several agents that hand a call between them | `references/multi-agent-teams.md` — handoff tools are minted from the team's edges and named after the target agent's slug; each agent still binds its own tools |
 | Create, pause, resume, or cancel an outbound batch | `references/outbound-batches.md` |
 | Read, write, or test-run a Tool | `references/tools.md` |
 | Design disposition outcomes or an outcome metadata schema | `references/outcome-design.md` |

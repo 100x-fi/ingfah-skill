@@ -38,7 +38,7 @@ fix is dashboard-only, give the menu path instead.
 | Facts the agent answers with, or invents | knowledge files attached to the agent, and the prompt | คลังความรู้ (upload is dashboard-only) | `references/faq-authoring.md` |
 | The agent's voice | revision `voice_id` | AI Agent → แก้ไขแบบร่าง → เสียง | `GET /client/voices`, revisions |
 | Customer name, amount, or due date wrong or missing on a call | batch record data and template columns vs the prompt's variables | สายออก → จัดการเทมเพลต | outbound options, `customer-context-variables` |
-| Handoff to another agent, or none | team transferabilities and the agent flow | ทีม AI Agent → แก้ไข | `references/agents-and-teams.md` |
+| Handoff to another agent, or none; the next agent greets again, re-asks, or says it is transferring | team transferabilities, the handoff mode, and each receiving agent's "taking over a call" section | ทีม AI Agent → แก้ไข | `references/multi-agent-teams.md` |
 | The agent says a tool's name aloud (`transfer_to_human_agent{}`), says it will transfer and does not, or repeats its goodbye without hanging up | first the agent's **tool bindings**, then the prompt around the tool | AI Agent → แก้ไขแบบร่าง → Tools | `GET /client/agents/{slug}` `phone_tools` / `ai_plugin_functions`; `references/agents-and-teams.md` |
 | A Tool not called, or failing | Tool description and parameters | Tool | `references/tools.md` |
 | Data not reaching their CRM, sheet, or webhook | Chat Automation | — | `references/automations.md` |
