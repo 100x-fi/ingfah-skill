@@ -4,6 +4,14 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.5.1] — 2026-10-02
+
+### Fixed
+
+- `SKILL.md` frontmatter failed to parse as YAML, so the skill could not be
+  installed. The unquoted `description` contained `: ` (in "Thai words: AI
+  Agent Team"), which YAML reads as a new key. The value is now quoted.
+
 ## [1.5.0] — 2026-09-30
 
 ### Added
@@ -187,6 +195,7 @@ First versioned release.
   moved from `SKILL.md` into `references/`, so less loads on every use.
 - Install and update through the `skills` CLI; MIT license.
 
+[1.5.1]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.5.1
 [1.2.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.2.0
 [1.1.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.1.0
 [1.0.2]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.0.2
