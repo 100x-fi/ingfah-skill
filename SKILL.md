@@ -28,6 +28,8 @@ is in `references/`; **read the matching file before working in that area**:
 | Design, build, or change a team of several agents that hand a call between them | `references/multi-agent-teams.md` — handoff tools are minted from the team's edges and named after the target agent's slug; each agent still binds its own tools |
 | Create, pause, resume, or cancel an outbound batch | `references/outbound-batches.md` |
 | Read, write, or test-run a Tool | `references/tools.md` |
+| A voice agent should transfer a call to a person, or the client asks how transfers work | `references/voice-handoff.md` |
+| A text (LINE / chat) agent should hand a chat to a person, or the AI should be switched on or off for one conversation | `references/text-chat-handoff.md` |
 | Design disposition outcomes or an outcome metadata schema | `references/outcome-design.md` |
 | Set up automated tests for an agent, or run them before publishing | `references/testing.md`, with the template in `templates/promptfoo-suite/`. The user supplies a model API key and each run costs money |
 | Create or edit a postprocessor | `references/postprocessors.md` |
@@ -205,7 +207,7 @@ for a number, which is billed separately.
 - Treat the key as available only for the current task unless the user explicitly requests persistent configuration.
 - Use HTTPS and the configured Ingfah API base URL.
 - Before making a request, explain when the requested operation requires a write scope.
-- Ask for explicit confirmation immediately before creating, deleting, pausing, resuming, or cancelling anything.
+- Ask for explicit confirmation immediately before creating, deleting, pausing, resuming, or cancelling anything, and before turning the AI on or off in a customer's conversation.
 - Redact secrets from all displayed request and response details.
 
 The script reads `INGFAH_API_KEY` from the process environment. When the user provides a key conversationally, pass it to the script only for the current process; never write it to a file or include it in a command shown to the user.
@@ -258,6 +260,7 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `GET /client/agents/{slug}/revisions`
 - `GET /client/agents/{slug}/revisions/{id}`
 - `GET /client/phone-tools`
+- `GET /client/text-chat-tools`
 - `GET /client/plugin-functions`
 - `GET /client/plugin-functions/{id}`
 - `GET /client/plugin-function-integrations`
@@ -308,6 +311,11 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `GET /client/text-analytics/summary`
 - `GET /client/text-analytics/messages-hourly`
 - `GET /client/text-analytics/heatmap`
+
+### `text_chat_conversations:write`
+
+- `PUT /client/chat-conversations/{uuid}` (body `{"bot_enabled": bool}` only)
+- `PUT /client/text-chats/{provider_type}/channels/{channel_identifier}/conversations/{provider_conversation_id}` (same switch, named by the provider's ids)
 
 ### `client_outbound_options:read`
 

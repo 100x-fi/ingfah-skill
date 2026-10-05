@@ -197,10 +197,19 @@ class IngfahApiTests(unittest.TestCase):
             "/client/text-channel-configs/4",
             "/client/outbound/call-data-records",
             "/client/voices",
+            "/client/text-chat-tools",
         ):
             self.assertTrue(ingfah_api._is_allowed("GET", path), path)
             self.assertFalse(ingfah_api._is_mutation("GET", path), path)
         self.assertFalse(ingfah_api._is_allowed("GET", "/client/analytics/unknown"))
+        for path in (
+            "/client/chat-conversations/5b2d9a70-3c41-4e8f-9d10-222222222222",
+            "/client/text-chats/boonterm/channels/ch-1/conversations/conv-9",
+        ):
+            self.assertTrue(ingfah_api._is_mutation("PUT", path), path)
+        # Sending a message or claiming a conversation stays dashboard-only.
+        self.assertFalse(ingfah_api._is_allowed("POST", "/client/chat-conversations/abc/messages"))
+        self.assertFalse(ingfah_api._is_allowed("PUT", "/client/chat-conversations/abc/handling-admin"))
         # Channel writes stay dashboard-only: they store messaging credentials.
         self.assertFalse(ingfah_api._is_allowed("POST", "/client/text-channel-configs"))
 
@@ -328,8 +337,20 @@ class RevisionToolGuardTests(unittest.TestCase):
         self.assertEqual(sent, [("POST", "/agents/my-agent/revisions")])
 
     def test_text_agent_phone_tools_are_not_required(self):
-        self.AGENT = {"data": {"type": "text", "phone_tools": [], "ai_plugin_functions": [{"id": 5}]}}
-        error, _ = self._run({"ai_plugin_function_ids": [5]})
+        self.AGENT = {"data": {"type": "text", "phone_tools": [], "ai_plugin_functions": [{"id": 5}], "text_chat_tools": []}}
+        error, _ = self._run({"ai_plugin_function_ids": [5], "text_chat_tools": []})
+        self.assertIsNone(error)
+
+    def test_text_agent_revision_must_carry_text_chat_tools(self):
+        self.AGENT = {"data": {"type": "text", "phone_tools": [], "ai_plugin_functions": [],
+                               "text_chat_tools": [{"id": 1, "name": "handoff_to_human"}]}}
+        error, sent = self._run({"ai_plugin_function_ids": []})
+        self.assertIn("text_chat_tools", error)
+        self.assertIn("[1]", error)
+        self.assertNotIn(("POST", "/agents/my-agent/revisions"), sent)
+        error, _ = self._run({"ai_plugin_function_ids": [], "text_chat_tools": []})
+        self.assertIn("drops", error)
+        error, _ = self._run({"ai_plugin_function_ids": [], "text_chat_tools": [1]})
         self.assertIsNone(error)
 
 

@@ -14,6 +14,10 @@ cannot call it, and it may say the tool's name out loud instead.
   transfer to a human, send DTMF, hang up — the platform's global ones plus the
   client's own. Their ids go in an agent's or revision's `phone_tools`.
   Supports `page`, `per_page` (max 100), `search`, and `ids` (comma-separated).
+- `GET /client/text-chat-tools` is the same list for a **text** agent: tools
+  the AI may call inside a chat, such as `handoff_to_human`. Same query
+  parameters. Their ids go in a text agent's or revision's `text_chat_tools`;
+  an audio agent's are dropped. See `references/text-chat-handoff.md`.
 - `GET /client/plugin-function-integrations` is the catalog a plugin function
   is built from: each integration, its methods, and the integration parameters
   it takes. Read it before creating a function so `integration` and

@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 
-__version__ = "1.6.0"
+__version__ = "1.7.0"
 
 DEFAULT_BASE_URL = "https://api.ingfah.ai"
 API_KEY_ENV = "INGFAH_API_KEY"
@@ -39,7 +39,7 @@ ROUTE_PATTERNS = (
     ("GET", re.compile(r"^/client/(text-channel-config-providers|text-channel-configs)$")),
     ("GET", re.compile(r"^/client/text-channel-configs/[^/]+$")),
     ("GET", re.compile(r"^/client/text-chats/channel-configs(?:/[^/]+)?$")),
-    ("GET", re.compile(r"^/client/(ai-agents|agent-templates|phone-tools|voices)$")),
+    ("GET", re.compile(r"^/client/(ai-agents|agent-templates|phone-tools|text-chat-tools|voices)$")),
     ("GET", re.compile(r"^/client/plugin-function-integrations$")),
     ("GET", re.compile(r"^/client/plugin-functions(?:/[^/]+)?$")),
     ("POST", re.compile(r"^/client/plugin-functions$")),
@@ -61,6 +61,8 @@ ROUTE_PATTERNS = (
     ("GET", re.compile(r"^/client/agents/[^/]+/chat-session-tests(?:/[^/]+)?$")),
     ("GET", re.compile(r"^/client/text-chats/chat-sessions-list(?:/csv)?$")),
     ("GET", re.compile(r"^/client/text-chats/conversations(?:/[^/]+)?$")),
+    ("PUT", re.compile(r"^/client/chat-conversations/[^/]+$")),
+    ("PUT", re.compile(r"^/client/text-chats/[^/]+/channels/[^/]+/conversations/[^/]+$")),
     ("GET", re.compile(r"^/client/analytics/(summary|short-calls|hourly-charts|duration-histogram|heatmap|speech-ratio)$")),
     ("GET", re.compile(r"^/client/analytics/report/download$")),
     ("GET", re.compile(r"^/client/text-analytics/(summary|messages-hourly|heatmap)$")),
@@ -81,7 +83,8 @@ REVISION_CREATE = re.compile(r"^/client/agents/([^/]+)/revisions$")
 
 # A revision replaces the agent's whole configuration, tool bindings included,
 # and the backend stores exactly the id lists it is sent: an omitted
-# `phone_tools` or `ai_plugin_function_ids` saves a revision with NO tools.
+# `phone_tools`, `ai_plugin_function_ids` or `text_chat_tools` saves a
+# revision with NO tools of that kind.
 # The revision read (GET .../revisions/{id}) does not return either list, so a
 # body copied from it strips every tool. The bindings are only readable from
 # GET /client/agents/{slug} (the published revision), under the names below.
@@ -92,6 +95,7 @@ REVISION_TOOL_FIELDS = (
     # (revision body key, agent read key, dashboard name)
     ("phone_tools", "phone_tools", "Tools เกี่ยวกับการโทร (phone tools)"),
     ("ai_plugin_function_ids", "ai_plugin_functions", "Tools ทั่วไป (plugin functions)"),
+    ("text_chat_tools", "text_chat_tools", "text chat tools (e.g. handoff_to_human)"),
 )
 FLOW_TOOL_KEYS = (("phone_tools", "phone_tools"), ("plugin_functions", "ai_plugin_function_ids"))
 
@@ -151,7 +155,8 @@ def check_revision_tools(slug: str, body: Any, current_agent: Any) -> list[str]:
     """Return the reasons a revision body would unbind tools; empty when safe.
 
     `current_agent` is the GET /client/agents/{slug} response. A text agent's
-    phone tools are dropped by the server anyway, so they are not compared.
+    phone tools, and an audio agent's text chat tools, are dropped by the server
+    anyway, so they are not compared.
     """
     if not isinstance(body, dict):
         return []
@@ -160,7 +165,7 @@ def check_revision_tools(slug: str, body: Any, current_agent: Any) -> list[str]:
     is_text = agent.get("type") == "text"
     problems: list[str] = []
     for body_key, agent_key, label in REVISION_TOOL_FIELDS:
-        if body_key == "phone_tools" and is_text:
+        if (body_key == "phone_tools" and is_text) or (body_key == "text_chat_tools" and not is_text):
             continue
         bound = _ids(agent.get(agent_key))
         if body_key not in body:

@@ -100,8 +100,9 @@ next call.
 |---|---|---|
 | `phone_tools` — ids | `GET /client/agents/{slug}` → `phone_tools[].id` | Tools เกี่ยวกับการโทร |
 | `ai_plugin_function_ids` — ids | `GET /client/agents/{slug}` → `ai_plugin_functions[].id` | Tools ทั่วไป |
+| `text_chat_tools` — ids (text agents only) | `GET /client/agents/{slug}` → `text_chat_tools[].id` | — |
 
-`GET /client/agents/{slug}/revisions/{id}` returns **neither** list. A body
+`GET /client/agents/{slug}/revisions/{id}` returns **none** of these lists. A body
 built only from the revision read — the obvious "read, edit the prompt, post
 it back" — unbinds every tool.
 

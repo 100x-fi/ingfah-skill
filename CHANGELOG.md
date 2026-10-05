@@ -4,6 +4,28 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.7.0] — 2026-10-05
+
+### Added
+
+- `GET /client/text-chat-tools` (`ai_agents:read`), the tools a text agent
+  may call in a chat, starting with `handoff_to_human`.
+- The `text_chat_conversations:write` scope and its two routes, which turn the
+  AI on or off for one text conversation: `PUT /client/chat-conversations/{uuid}`
+  and `PUT /client/text-chats/{provider_type}/channels/{channel_identifier}/conversations/{provider_conversation_id}`.
+- `references/text-chat-handoff.md`: what `handoff_to_human` does, the four
+  questions to settle with a client before binding it, how the bot switch
+  behaves, and why dashboard test chats cannot show a handoff.
+- `references/voice-handoff.md`: the cold and warm transfer tools compared,
+  what only Ingfah's team can configure (numbers, ring timeout, hold and
+  no-answer messages), the questions to settle with a client, and how to
+  verify a transfer from the call's messages.
+
+### Fixed
+
+- The revision guard now checks a text agent's `text_chat_tools`. Before, a
+  prompt-only revision that omitted them silently unbound `handoff_to_human`.
+
 ## [1.6.0] — 2026-10-02
 
 ### Added
@@ -220,6 +242,7 @@ First versioned release.
   moved from `SKILL.md` into `references/`, so less loads on every use.
 - Install and update through the `skills` CLI; MIT license.
 
+[1.7.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.7.0
 [1.6.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.6.0
 [1.5.1]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.5.1
 [1.2.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.2.0
