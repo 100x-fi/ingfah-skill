@@ -1,11 +1,12 @@
 ---
 name: ingfah
-description: "Answer questions about Ingfah (อิงฟ้า) from its bundled user guide (คู่มือ), write FAQ files for its knowledge base (คลังความรู้), and work with the Ingfah client platform through client API-key authenticated APIs. Use when the user asks anything about Ingfah — services, how to do something in the dashboard, telephony, onboarding, settings, billing, release notes — wants an FAQ or knowledge document for an AI Agent, asks to inspect or manage products, AI agents, chat sessions, tools, customer templates, outbound batches, or analytics, or reports something wrong in what they see (a bad call summary or title, wrong outcome labels, an agent saying the wrong thing, missed calls) and wants it fixed, including in the dashboard's English or Thai words: AI Agent Team / ทีม AI Agent, batch / Batch โทรออก, calls / สายทั้งหมด, chats / แชท, templates / เทมเพลตข้อมูลลูกค้า, tools / Tool, knowledge / คลังความรู้, post-call results / ผลลัพธ์หลังวางสาย. Do not use backoffice APIs or JWT-only client APIs."
+description: "Answer questions about Ingfah (อิงฟ้า) from its bundled user guide (คู่มือ), recommend practical setups and improvements for business goals, plan pilots, write FAQ files for its knowledge base (คลังความรู้), and work with the Ingfah client platform through client API-key authenticated APIs. Use when the user asks anything about Ingfah — services, how to do something in the dashboard, telephony, onboarding, settings, billing, release notes — wants an FAQ or knowledge document for an AI Agent, asks to inspect or manage products, AI agents, chat sessions, tools, customer templates, outbound batches, or analytics, or reports something wrong in what they see (a bad call summary or title, wrong outcome labels, an agent saying the wrong thing, missed calls) and wants it fixed, including in the dashboard's English or Thai words: AI Agent Team / ทีม AI Agent, batch / Batch โทรออก, calls / สายทั้งหมด, chats / แชท, templates / เทมเพลตข้อมูลลูกค้า, tools / Tool, knowledge / คลังความรู้, post-call results / ผลลัพธ์หลังวางสาย. Do not use backoffice APIs or JWT-only client APIs."
 ---
 
 # Ingfah
 
-This skill does three things:
+This skill answers questions, advises users on their setup, and carries out
+supported tasks:
 
 1. **Answers questions about Ingfah** from the bundled user guide — see
    "Answering questions about Ingfah" below. No API key needed.
@@ -13,6 +14,9 @@ This skill does three things:
    `references/faq-authoring.md` first. No API key needed.
 3. **Calls the Ingfah client API** with the user's client API key, using only
    the routes listed below.
+4. **Recommends a practical setup or improvement** for the user's business
+   goal. Read `references/consulting.md` for discovery, tradeoffs, pilot plans,
+   and worked examples. No API key is needed for advice.
 
 The default Ingfah API base URL is `https://api.ingfah.ai`. Use another base URL only when the user explicitly provides one.
 
@@ -21,6 +25,7 @@ is in `references/`; **read the matching file before working in that area**:
 
 | Task | Read first |
 |---|---|
+| Recommend a setup, assess suitability, plan a pilot, or improve business results | `references/consulting.md`, then the matching technical reference and user-guide page |
 | Answer a question about Ingfah or how to use the dashboard | `references/user-guide/INDEX.md`, then the matching page |
 | Write, convert, or update an FAQ or knowledge file | `references/faq-authoring.md` |
 | Write or edit an agent's prompt | `references/prompt-authoring.md` — a prompt that bakes per-call data into its body is incorrect, not merely suboptimal. Its Jinja section lists engine traps that fail silently, and "Testing a change" has the go-live checklist |
@@ -37,6 +42,7 @@ is in `references/`; **read the matching file before working in that area**:
 | Translate a field name the user reads in the dashboard | `references/dashboard-terms.md` |
 | The user complains about something they see (a wrong summary, label, answer, or voice; missed calls) | `references/troubleshooting.md` |
 | Analytics, text chat inbox, channels, or why outbound calls failed | `references/reporting.md` |
+| Check capacity before an inbound SIP transfer, or list customer tags | `references/reporting.md` |
 | Create, edit, or delete a customer template | `references/outbound-batches.md` |
 
 ## Answering questions about Ingfah
@@ -51,10 +57,11 @@ inbound and outbound, results, all calls, settings), and the release notes.
   page with its description. For a specific term, search the folder, e.g.
   `grep -ril "say-as" references/user-guide`. Read the whole page before
   answering; steps and caveats are often in a later section or a `:::caution`.
-- **Answer only from the guide** (and the other references in this skill).
-  Do not fill gaps from general knowledge about voice AI, other products, or
-  guesses about pricing, limits, or timelines. When the guide does not cover
-  it, say so and suggest asking the Ingfah team.
+- **Ground capability claims in the guide** and the other references in this
+  skill. Give recommendations that follow from those capabilities and the
+  user's goal, and label them as recommendations. Do not invent platform
+  behavior, pricing, limits, delivery dates, or guaranteed business results.
+  When a capability is undocumented, say so and suggest asking the Ingfah team.
 - **Answer in the user's language**, in the dashboard's words. The guide is
   in Thai; for English speakers translate, and give the Thai menu name the
   first time (e.g. Knowledge — คลังความรู้) since the dashboard shows Thai.
@@ -69,6 +76,15 @@ inbound and outbound, results, all calls, settings), and the release notes.
 For how the platform behaves through the API — field names, state rules,
 request bodies — the other `references/` files are more precise than the
 guide, which describes the dashboard.
+
+## Advising users
+
+For "what should we use?", "how should we set this up?", or "how can we improve?",
+give a recommendation and explain the tradeoff. Follow `references/consulting.md`.
+Connect the goal to the agent, team, data, Tools, post-call results, and channels
+that are needed. Propose a small test and say how the user can judge its result.
+Ask only for missing facts that change the recommendation. Advice does not
+require an API key or authorize a platform write.
 
 ## Client API
 
@@ -234,6 +250,8 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `GET /client/products`
 - `GET /client/products/{id}`
 - `GET /client/products/{id}/automations`
+- `GET /client/products/{id}/automations/catalog`
+- `GET /client/automations/trigger-variables`
 - `GET /client/text-channel-configs`
 - `GET /client/text-channel-configs/{id}`
 - `GET /client/text-channel-config-providers`
@@ -295,6 +313,7 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `GET /client/agents/{slug}/chat-session-tests`
 - `GET /client/agents/{slug}/chat-session-tests/{uuid}`
 - `GET /client/text-chats/conversations`
+- `GET /client/text-chats/tags`
 - `GET /client/text-chats/conversations/{uuid}`
 - `GET /client/text-chats/chat-sessions-list`
 - `GET /client/text-chats/chat-sessions-list/csv`
@@ -341,6 +360,12 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `POST /client/outbound/batches/{id}/pause`
 - `POST /client/outbound/batches/{id}/resume`
 - `POST /client/outbound/batches/{id}/cancel`
+
+### `inbound_admission:read`
+
+- `GET /client/calls/inbound-admission` checks whether the account can accept
+  one more inbound call. A 200 response can contain `allow: false`; inspect
+  the body before recommending a transfer. See `references/reporting.md`.
 
 ## Scope handling
 

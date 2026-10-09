@@ -4,6 +4,31 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.8.0] — 2026-10-09
+
+### Added
+
+- `GET /client/calls/inbound-admission` with `inbound_admission:read` to
+  check current inbound call capacity before a SIP transfer.
+- `GET /client/text-chats/tags` with `chat_sessions:read` to list and search
+  customer tags and their customer counts.
+- Automation discovery through `GET /client/products/{id}/automations/catalog`
+  and `GET /client/automations/trigger-variables` with `client_products:read`.
+- Consulting guidance for choosing a setup, explaining tradeoffs, planning
+  a pilot, and measuring results from the user's business goal.
+
+### Changed
+
+- Refreshed the bundled Thai guide to 73 pages, including callbacks, speech
+  previews, text channels, analytics, and team Automations.
+- Updated Automation instructions to the current `http` and `do_not_contact`
+  catalog and Jinja configuration, with guidance for legacy rows.
+
+### Fixed
+
+- Reporting guidance now documents API-key bot mute control rather than
+  describing it as dashboard-only.
+
 ## [1.7.0] — 2026-10-05
 
 ### Added

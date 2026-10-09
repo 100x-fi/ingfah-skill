@@ -25,6 +25,11 @@ The dashboard shows these on its แดชบอร์ด page.
 
 ## Text chat — `analytics:read` / `chat_sessions:read`
 
+- `GET /client/text-chats/tags` requires `chat_sessions:read`. It returns
+  `data.rows` containing `id`, `name`, and `customer_count` for the client's
+  customer tags. Optional `q` searches the catalog; omit it to list all tags.
+  This is read-only. Assigning or changing customer tags is dashboard-only.
+
 - `GET /client/text-analytics/summary`, `/messages-hourly`, `/heatmap` take
   `from`, `to`, `timezone`, and optional `client_product_ids`,
   `agent_team_ids`, `channel_ids`.
@@ -42,8 +47,27 @@ The dashboard shows these on its แดชบอร์ด page.
   `{key, is_set}`, never as values. Adding or editing a channel is
   dashboard-only: การตั้งค่า → Channels, Owner only.
 
-Muting the bot, replying as a human, and reassigning a conversation are
-dashboard-only on purpose; an API key cannot do them.
+An API key can mute or unmute the bot with `text_chat_conversations:write`;
+read `text-chat-handoff.md` before changing that switch. Replying as a human
+and reassigning a conversation remain dashboard-only.
+
+## Inbound capacity — `inbound_admission:read`
+
+`GET /client/calls/inbound-admission` is API-key authenticated and takes no
+phone number or team id. It checks capacity for the key's client account.
+The response's `data` contains `allow`, `live_concurrent`, and `max_concurrent`.
+
+Use it before an external phone system transfers another inbound call over SIP,
+or to investigate capacity. `live_concurrent` includes live sessions and outbound
+records currently dialing. With no active license, `max_concurrent` is zero
+and admission is denied.
+
+HTTP 200 does not mean a call is allowed. Check `allow`; false means do not
+transfer based on this check. A failed check can return HTTP 500 and does not
+establish available capacity. This is a momentary check, not a capacity
+reservation, so another call can consume capacity before the transfer arrives.
+
+This endpoint does not configure SIP, connect a number, or start a call.
 
 ## Outbound call attempts — `client_outbound_batches:read`
 

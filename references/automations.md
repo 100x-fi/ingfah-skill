@@ -1,139 +1,112 @@
-# Chat Automation
+# Team Automations
 
-An automation makes the platform **do something when a call or chat reaches a
-certain point** — most usefully, call an external system. It is how a team
-posts a call result to a CRM, or triggers an SMS to the customer after the
-call ends. The agent is not involved: this runs server-side after the event,
-so it fires whether or not the agent remembered anything.
+Use Automation for work that must happen on a conversation event, such as
+sending results to a CRM. Use a Tool for an action the agent chooses during
+the conversation. Read `user-guide/guides/inbound-outbound/team-automations.md`
+for dashboard instructions.
 
-These routes are live but are **not in the public OpenAPI spec**. Rely on the
-rules below rather than looking them up there.
+## Discover what the team supports
 
-An automation belongs to a product and is a pair of *when* and *what*:
+Read through `scripts/ingfah_api.py` before proposing a change:
 
-| Field | Meaning |
-|---|---|
-| `trigger_event` | when it fires |
-| `automation_type` | what it does |
-| `automation_config` | the settings for that type |
-| `trigger_condition` | optional filter — only fire for some sessions |
-| `is_enabled` | defaults to `true` |
+- `GET /client/products/{id}/automations` lists the current Automations.
+- `GET /client/products/{id}/automations/catalog` lists supported event/type
+  pairs, configuration fields, and variables for that team's channel.
+- `GET /client/automations/trigger-variables` lists variables more broadly.
+  It does not expand the event/type pairs the team catalog permits.
 
-Each type is pinned to exactly one trigger, and a mismatched pair is refused
-at creation with `400 automation_type "x" requires trigger_event "y"`:
+Reads require `client_products:read`. Mutations require `client_products:write`.
+If catalog discovery fails, report the response and use the dashboard or ask
+the Ingfah team. Source code does not establish support on a live deployment.
 
-| `automation_type` | Required `trigger_event` | What it does |
+The source snapshot reviewed on 2026-10-09 offers these pairs:
+
+| Team channel | `automation_type` | `trigger_event` |
 |---|---|---|
-| `webhook` | `session_ended` | Sends an HTTP request when the call or chat ends |
-| `mark_dnc` | `disposition_outcome_set` | Marks the number do-not-contact / ไม่ติดต่อ |
+| Voice | `http`, `do_not_contact` | `session_started`, `session_ended` |
+| Text | `http` | `session_started`, `handoff_to_human`, `session_ended` |
 
-These two are the general-purpose types. Never offer or guess another type:
-if a read returns an automation whose type is not in the table above, report
-it by the name the API gave and leave it alone.
+Use `session_ended` for completed postprocessing results. Disposition and
+metadata can remain null when their postprocessor is absent.
 
-`session_started` and `outcome_metadata_set` are also valid trigger values,
-but no general-purpose type accepts them. Some other type names exist in the
-platform and are **rejected** by this API with `400 invalid automation_type`,
-so a type outside the table is not worth attempting.
+## Create a current Automation
 
-## The webhook type
+`POST /client/products/{id}/automations` takes `trigger_event`,
+`automation_type`, `trigger_condition_jinja`, `automation_config_jinja`, and
+`is_enabled`. The condition is optional and enabled defaults to true.
+Prepare an integration disabled when its destination contract is untested.
+Creating a disabled configuration still requires write confirmation.
 
-`automation_config` for `webhook` takes `url` (required, absolute http(s)),
-`method` (defaults to `POST`), `headers`, and `body`. `headers` and every
-string in `body` are templates rendered against the finished session.
+The current client API rejects `trigger_condition` and `automation_config`,
+including null values. Do not copy them from a legacy row. New types are
+`http` and `do_not_contact`; do not create legacy `webhook` or `mark_dnc` types.
 
-Placeholders are `{{path}}`:
+### Send results to a CRM
 
-- Session columns directly — `{{customer_phone}}`, `{{disposition_outcome}}`,
-  `{{uuid}}` — or spelled `{{chat_sessions.customer_phone}}`.
-- Outcome metadata by dot path — `{{outcome_metadata.promise_date}}` — so
-  whatever the `outcome_metadata` postprocessor extracts can be forwarded.
-- For a call dialled from a batch, the uploaded row —
-  `{{outbound_batch_records.optional_data.policy_no}}`.
-- Fallbacks with `||`, ending in a quoted literal:
-  `{{outcome_metadata.name || customer_name || 'N/A'}}`.
-- One filter, `phone`, with `--format=e164|msisdn|local`:
-  `{{customer_phone | phone --format=local}}`.
+The whole `automation_config_jinja` string must render to a JSON object.
+An `http` object takes required `url`, optional `method`, `headers`, and `body`.
+Method defaults to POST; supported methods are GET, POST, PUT, PATCH, and DELETE.
+Headers and body are JSON values. There is no second placeholder rendering pass.
 
-An unresolved placeholder **fails the whole delivery** rather than sending a
-blank, so give any optional field a quoted default. Delivery retries on 5xx and
-network errors; a 4xx is terminal and is not retried.
-
-### Example: post the call result to a CRM
+Use `session.*` variables from the catalog. Insert dynamic JSON values with
+`tojson` without quoting the interpolation. Escape quotes for the outer JSON.
 
 ```json
 {
   "trigger_event": "session_ended",
-  "automation_type": "webhook",
-  "automation_config": {
-    "url": "https://crm.example.com/api/call-results",
-    "method": "POST",
-    "headers": {"Authorization": "Bearer REDACTED"},
-    "body": {
-      "phone": "{{customer_phone | phone --format=e164}}",
-      "result": "{{disposition_outcome || 'unknown'}}",
-      "promise_date": "{{outcome_metadata.promise_date || ''}}",
-      "session_id": "{{uuid}}"
-    }
-  }
+  "automation_type": "http",
+  "trigger_condition_jinja": "{{ session.disposition_outcome == 'ลูกค้าตกลง' }}",
+  "automation_config_jinja": "{\"url\":\"https://crm.example.com/calls\",\"method\":\"POST\",\"body\":{\"session_id\":{{ session.id | tojson }},\"phone\":{{ session.customer_phone | tojson }},\"outcome\":{{ session.disposition_outcome | tojson }}}}",
+  "is_enabled": false
 }
 ```
 
-### Example: send an SMS after the call, only when the customer agreed
+Replace this voice-team example's destination and outcome with the confirmed
+contract. For text teams, use text variables instead of voice phone fields.
 
-There is no SMS automation type. Sending an SMS means pointing the webhook at
-an SMS provider's own API, exactly as the CRM example points at a CRM.
-`trigger_condition` keeps it to the calls that earned it:
+A condition runs only when its rendered output is `true`, ignoring case and
+surrounding whitespace. Other outputs skip; rendering errors fail. Guard
+optional objects before accessing nested fields. Use only fields available
+for the selected event, even inside conditional branches.
 
-```json
-{
-  "trigger_event": "session_ended",
-  "automation_type": "webhook",
-  "trigger_condition": {"disposition_outcome": "ลูกค้าตกลง"},
-  "automation_config": {
-    "url": "https://sms.example.com/send",
-    "method": "POST",
-    "headers": {"Authorization": "Bearer REDACTED"},
-    "body": {
-      "msisdn": "{{customer_phone | phone --format=msisdn}}",
-      "message": "ขอบคุณค่ะ นัดชำระวันที่ {{outcome_metadata.promise_date}}",
-      "sender": "Ingfah"
-    }
-  }
-}
-```
+HTTP 2xx succeeds; 4xx is terminal. Network errors and HTTP 3xx or 5xx retry.
+Design the destination to tolerate repeated deliveries, using the session id
+when appropriate. Private, loopback, and link-local destinations are blocked.
 
-The alternative — giving the agent an SMS **Tool** — fires only if the agent
-decides to call it mid-conversation. An automation fires on every matching
-session. Prefer the automation for "after the call, always"; say which one is
-being set up.
+### Honor a request to stop contact
 
-## Trigger conditions
+For a voice team, use `do_not_contact` with a condition matching the confirmed
+opt-out outcome. Configuration accepts only `duration_days`, an integer of
+at least 1. Omit it for an indefinite exclusion. The phone comes from the
+session; do not add a `phone` field.
 
-`trigger_condition` is a small JSON match language over the session. Omit it,
-or send `{}`, and the automation runs for every session.
+For 30 days, the config string is `"{\"duration_days\":30}"`. Confirm the
+period and outcome criteria. The dashboard guide explains that excluded
+numbers also skip pending callbacks.
 
-- `{"disposition_outcome": "ติดต่อผิดเบอร์"}` — exact match.
-- `{"outcome_metadata.duration_days": {"gte": 5}}` — operators are `eq`, `ne`,
-  `gt`, `gte`, `lt`, `lte`, and all of an object's operators must hold.
-- Several keys are ANDed. A path that does not resolve simply does not match,
-  so the automation is skipped rather than failing.
+## Update or migrate safely
 
-## Rules
+- Read current Automations and avoid duplicates yourself. Do not assume the
+  server deduplicates identical creates.
+- PUT cannot contain `automation_type` or `trigger_event`. Create a replacement
+  to change either.
+- Omitted Jinja fields preserve their values. An empty string clears them,
+  but HTTP configuration still requires a URL. Clearing a legacy row's Jinja
+  condition can fall back to its stored legacy condition. It does not
+  necessarily mean "run for every conversation".
+- Prefer `is_enabled: false` to pause. Read it back after updating.
+- Legacy rows remain manageable. A legacy `webhook` cannot become `http` by
+  updating its type or adding config Jinja. Prepare a replacement and agree
+  the disable/enable order to avoid gaps or duplicate effects. Read back both.
+- Show the destination host, event, condition, payload, and expected effects
+  before confirmation. Redact header credentials. Disabling or deleting stops
+  downstream delivery.
+- Observe a new test conversation and verify receipt at the destination before
+  claiming the integration works.
 
-- Read `GET /client/products/{id}/automations` before changing anything. It
-  lists everything that runs for that product's sessions.
-- `automation_type` **cannot be changed on update** — sending it to `PUT`
-  returns `400 automation_type field is not allowed to be changed`. Delete and
-  recreate to change it.
-- Creating the same trigger, condition, config, and type twice on one product
-  returns `409 duplicate automation already exists`.
-- An automation sends this client's customer data to a third party on every
-  matching call. Show the full config, name the destination host, and get
-  explicit confirmation before creating, updating, enabling, or deleting one.
-  Deleting or disabling one silently stops a downstream system being fed.
-- `headers` carry auth tokens and `hmac_secret` is a credential. The platform
-  redacts them in its own logs; redact them in anything shown to the user too,
-  and never echo a token back in a summary.
-- Use `is_enabled: false` to stop an automation without losing its config —
-  prefer it to deleting when the user says "pause" or "หยุดไว้ก่อน".
+## Source baseline
+
+Reviewed against backend commit `d21f203` on 2026-10-09. Maintainer pointers
+are `ingfah/internal/modules/client/router.go`, `create_automation.go`,
+`update_automation.go`, `ingfah/internal/model/automation_catalog.go`, and
+`ingfah/internal/model/chat_session_automation.go` in the backend checkout.
