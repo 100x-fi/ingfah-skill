@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 
-__version__ = "1.7.0"
+__version__ = "1.8.0"
 
 DEFAULT_BASE_URL = "https://api.ingfah.ai"
 API_KEY_ENV = "INGFAH_API_KEY"
@@ -30,6 +30,8 @@ ROUTE_PATTERNS = (
     ("PUT", re.compile(r"^/client/products/[^/]+/visibility$")),
     ("DELETE", re.compile(r"^/client/products/[^/]+$")),
     ("GET", re.compile(r"^/client/products/[^/]+/automations$")),
+    ("GET", re.compile(r"^/client/products/[^/]+/automations/catalog$")),
+    ("GET", re.compile(r"^/client/automations/trigger-variables$")),
     ("POST", re.compile(r"^/client/products/[^/]+/automations$")),
     ("PUT", re.compile(r"^/client/products/[^/]+/automations/[^/]+$")),
     ("DELETE", re.compile(r"^/client/products/[^/]+/automations/[^/]+$")),
@@ -61,6 +63,8 @@ ROUTE_PATTERNS = (
     ("GET", re.compile(r"^/client/agents/[^/]+/chat-session-tests(?:/[^/]+)?$")),
     ("GET", re.compile(r"^/client/text-chats/chat-sessions-list(?:/csv)?$")),
     ("GET", re.compile(r"^/client/text-chats/conversations(?:/[^/]+)?$")),
+    ("GET", re.compile(r"^/client/text-chats/tags$")),
+    ("GET", re.compile(r"^/client/calls/inbound-admission$")),
     ("PUT", re.compile(r"^/client/chat-conversations/[^/]+$")),
     ("PUT", re.compile(r"^/client/text-chats/[^/]+/channels/[^/]+/conversations/[^/]+$")),
     ("GET", re.compile(r"^/client/analytics/(summary|short-calls|hourly-charts|duration-histogram|heatmap|speech-ratio)$")),

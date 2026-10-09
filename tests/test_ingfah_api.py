@@ -29,6 +29,40 @@ class FakeResponse:
 
 
 class IngfahApiTests(unittest.TestCase):
+    def test_discovery_routes_send_authenticated_gets(self):
+        paths = (
+            "/client/products/7/automations/catalog",
+            "/client/automations/trigger-variables",
+            "/client/calls/inbound-admission",
+            "/client/text-chats/tags",
+        )
+        with patch.dict(os.environ, {"INGFAH_API_KEY": "secret-key"}), patch(
+            "scripts.ingfah_api.urllib.request.urlopen",
+            side_effect=lambda *_args, **_kwargs: FakeResponse(b'{"data":[]}', 200),
+        ) as urlopen:
+            for path in paths:
+                with self.subTest(path=path):
+                    result = ingfah_api.request("GET", path)
+                    self.assertEqual(result.body, {"data": []})
+                    request = urlopen.call_args.args[0]
+                    self.assertEqual(request.get_method(), "GET")
+                    self.assertEqual(request.full_url, "https://api.ingfah.ai" + path)
+                    self.assertEqual(request.get_header("X-api-key"), "secret-key")
+
+    def test_discovery_rejects_writes_before_network(self):
+        with patch.dict(os.environ, {"INGFAH_API_KEY": "secret-key"}), patch(
+            "scripts.ingfah_api.urllib.request.urlopen"
+        ) as urlopen:
+            for path in (
+                "/client/products/7/automations/catalog",
+                "/client/automations/trigger-variables",
+                "/client/calls/inbound-admission",
+                "/client/text-chats/tags",
+            ):
+                with self.subTest(path=path), self.assertRaises(ingfah_api.ClientError):
+                    ingfah_api.request("POST", path, {}, confirm=True)
+            urlopen.assert_not_called()
+
     def test_get_sends_api_key_and_returns_json(self):
         captured = {}
 

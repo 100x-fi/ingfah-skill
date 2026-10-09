@@ -53,4 +53,4 @@ API Key เปรียบเสมือนรหัสผ่าน **ห้า
 
 ## นำ API Key ไปใช้ต่อ
 
-ดูวิธีให้ AI ช่วยสร้าง AI Agent ผ่าน API Key ได้ที่ [(Beta) วิธีใช้ AI สร้าง AI Agent ง่ายๆ](/guides/ai-agent/ai-create-agent-with-skill/) และเอกสารสำหรับนักพัฒนาที่ [developers.ingfah.ai](https://developers.ingfah.ai)
+ดูวิธีให้ผู้ช่วย AI อย่าง Claude หรือ ChatGPT ใช้งานอิงฟ้าผ่าน API Key ได้ที่ [(Beta) Skill ingfah](/guides/ingfah-skill/overview/) และเอกสารสำหรับนักพัฒนาที่ [developers.ingfah.ai](https://developers.ingfah.ai)

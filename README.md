@@ -9,6 +9,8 @@ It lets a coding agent such as Claude Code:
 
 - **answer questions about Ingfah** from a bundled copy of the Thai user guide
   (คู่มือ, [docs.ingfah.ai](https://docs.ingfah.ai)) — no API key needed;
+- **advise on a practical setup** for your business goal, explain tradeoffs,
+  and propose a pilot with measurable results, without needing an API key;
 - **write FAQ files for the knowledge base** (คลังความรู้) in the format that
   searches best, and check them before upload — no API key needed;
 - **use the client API** with a client API key to inspect and manage AI Agent
@@ -49,6 +51,7 @@ will change, wait for a yes, send it, then read it back.
 | `scripts/sync_user_guide.py` | Regenerates `references/user-guide/` from the docs repository |
 | `references/user-guide/` | The Thai user guide, one file per page, with `INDEX.md` |
 | `references/faq-authoring.md` | Writing, converting, and updating knowledge-base FAQ files |
+| `references/consulting.md` | Choosing a setup, planning a pilot, and improving results with evidence |
 | `references/agents-and-teams.md` | Creating and editing agents, revisions, and AI Agent Teams |
 | `references/multi-agent-teams.md` | Designing, building, testing, and launching a team of agents that hand calls between them |
 | `references/prompt-authoring.md` | How to write an agent's identity, task, and conversation flow |
