@@ -88,11 +88,18 @@ require an API key or authorize a platform write.
 
 ## Client API
 
-Use `scripts/ingfah_api.py` by default. It is dependency-free and enforces the route allowlist and the mutation confirmation rule. Do not substitute `curl`, `requests`, or an ad-hoc script, even if asked to for speed. Doing so bypasses both guardrails, and requests without the script's `User-Agent` header are rejected by Cloudflare with a 403 error-1010.
+Pick the client once per session:
+
+1. Run `ingfah --version`. If it prints `ingfah 0.1.0` or newer, use the `ingfah` CLI for every request.
+2. Otherwise use `scripts/ingfah_api.py`. It needs only `python3`, so it is the client on claude.ai, Claude Desktop, and any machine without the CLI.
+
+Both clients enforce the same route allowlist, mutation confirmation, and tool-drop guard. Do not substitute `curl`, `requests`, or an ad-hoc script, even if asked to for speed. Doing so bypasses the guardrails, and requests without a client's `User-Agent` header are rejected by Cloudflare with a 403 error-1010.
+
+Switch from the CLI to the script only when the CLI cannot reach the API: a connection error, or a 403 error-1010. Never switch after the CLI refuses a request (exit code 3). A refusal is a guard working, and the script would refuse it too.
 
 ### The `ingfah` CLI
 
-If `ingfah --version` succeeds and prints `ingfah 0.1.0` or newer, you may use the `ingfah` CLI instead of the script. It has the same route allowlist and tool-drop guard, and `ingfah api` prints the same `{status, data, pagination}` envelope. Its flags differ:
+`ingfah api` prints the same `{status, data, pagination}` envelope as the script. The examples in this skill use the script's flags. Translate them for the CLI:
 
 | Script | CLI |
 |---|---|
@@ -104,7 +111,7 @@ If `ingfah --version` succeeds and prints `ingfah 0.1.0` or newer, you may use t
 | `--allow-tool-drop` | `--allow-tool-drop` |
 
 - **Confirm every write.** Preview it with `--dry-run`, which prints the request and sends nothing. Get the user's yes, then rerun the same command with `--yes`. Never pass `--yes` before the user confirms. Without a terminal the CLI refuses a write that lacks `--yes`, so `--yes` is your confirmation, not a convenience flag.
-- **Revise and publish agents with the typed commands.** Prefer `ingfah agents revise SLUG` and `ingfah agents publish SLUG --revision ID` over raw `ingfah api` calls. `revise` copies every field from the newest revision and the tool links from the agent, then reads the new revision back. `publish` refuses a revision that is not the newest or that drops a tool, and re-reads the agent afterwards.
+- **Revise and publish agents with the typed commands.** Use `ingfah agents revise SLUG` and `ingfah agents publish SLUG --revision ID` rather than raw `ingfah api` calls. `revise` copies every field from the newest revision and the tool links from the agent, then reads the new revision back. `publish` refuses a revision that is not the newest or that drops a tool, and re-reads the agent afterwards.
 - **Keep the key out of the chat.** The CLI reads `INGFAH_API_KEY`, or the key stored by `ingfah auth login`. Suggest the user run `ingfah auth login` in their own terminal. It prompts for the key and keeps it in the system keyring.
 
 ## Naming: what the user calls things

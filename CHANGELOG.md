@@ -4,6 +4,14 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.9.1] — 2026-10-14
+
+### Changed
+
+- The agent uses the `ingfah` CLI first when `ingfah --version` reports
+  0.1.0 or newer, and the script otherwise. It switches to the script only
+  when the CLI cannot reach the API, never after a guard refusal.
+
 ## [1.9.0] — 2026-10-14
 
 ### Added
