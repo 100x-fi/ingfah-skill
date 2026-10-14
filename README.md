@@ -107,10 +107,16 @@ ln -s ~/src/ingfah-skill ~/.claude/skills/ingfah
 ### With the `ingfah` CLI
 
 When the [`ingfah` CLI](https://github.com/100x-fi/ingfah-client-cli) 0.1.0
-or newer is installed, the agent may use it instead of the script. It adds
+or newer is installed, the agent uses it instead of the script. It adds
 stronger guards for revising and publishing agents, and `ingfah auth login`
-keeps the key in the system keyring. Install instructions are in its README.
-Python 3 stays the only requirement.
+keeps the key in the system keyring. Install it with:
+
+```sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/100x-fi/ingfah-client-cli/releases/latest/download/ingfah-installer.sh | sh
+```
+
+Without the CLI the agent uses the script, so Python 3 stays the only
+requirement.
 
 ## Providing the API key
 
