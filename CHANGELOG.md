@@ -4,6 +4,22 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.9.0] — 2026-10-14
+
+### Added
+
+- The agent may use the `ingfah` CLI 0.1.0 or newer instead of
+  `scripts/ingfah_api.py` when it is installed. SKILL.md maps the script's
+  flags to the CLI's, requires a `--dry-run` preview and the user's yes
+  before `--yes`, and prefers `ingfah agents revise` and
+  `ingfah agents publish` for agent revisions. The script stays the default.
+
+### Removed
+
+- `GET /client/text-chats/channel-configs`, `/providers`, and `/{id}` from
+  the allowlist. Use the canonical `/client/text-channel-configs` routes,
+  which return the same data.
+
 ## [1.8.0] — 2026-10-09
 
 ### Added
