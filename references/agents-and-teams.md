@@ -128,7 +128,8 @@ Rules:
    a body that omits either list, drops an id the published agent uses, or
    names a state tool that is not bound. Pass `--allow-tool-drop` **only**
    when removing a tool is the change the user asked for, and name the tool
-   being removed in the preview.
+   being removed in the preview. When the `ingfah` CLI is installed,
+   `ingfah agents revise` and `ingfah agents publish` enforce the same rules.
 4. **Show the tool lists in the preview** next to the prompt diff: "Tools
    stay: transfer_to_human_agent, end_call_keyword, …". A user can catch a
    missing tool there; they cannot catch it in a prompt diff.

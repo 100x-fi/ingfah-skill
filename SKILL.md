@@ -88,7 +88,24 @@ require an API key or authorize a platform write.
 
 ## Client API
 
-Use `scripts/ingfah_api.py` for every request. It is dependency-free and enforces the route allowlist and the mutation confirmation rule. Do not substitute `curl`, `requests`, or an ad-hoc script, even if asked to for speed: doing so bypasses both guardrails, and requests without the script's `User-Agent` header are rejected by Cloudflare with a 403 error-1010.
+Use `scripts/ingfah_api.py` by default. It is dependency-free and enforces the route allowlist and the mutation confirmation rule. Do not substitute `curl`, `requests`, or an ad-hoc script, even if asked to for speed. Doing so bypasses both guardrails, and requests without the script's `User-Agent` header are rejected by Cloudflare with a 403 error-1010.
+
+### The `ingfah` CLI
+
+If `ingfah --version` succeeds and prints `ingfah 0.1.0` or newer, you may use the `ingfah` CLI instead of the script. It has the same route allowlist and tool-drop guard, and `ingfah api` prints the same `{status, data, pagination}` envelope. Its flags differ:
+
+| Script | CLI |
+|---|---|
+| `python3 scripts/ingfah_api.py METHOD PATH` | `ingfah api METHOD PATH` |
+| `--confirm` | `--yes` |
+| `--json FILE` or `--json '{...}'` | `--body @FILE` or `--body '{...}'` |
+| `--query '?a=b&c=d'` | `-q a=b -q c=d` |
+| `--output F` | `--out F` |
+| `--allow-tool-drop` | `--allow-tool-drop` |
+
+- **Confirm every write.** Preview it with `--dry-run`, which prints the request and sends nothing. Get the user's yes, then rerun the same command with `--yes`. Never pass `--yes` before the user confirms. Without a terminal the CLI refuses a write that lacks `--yes`, so `--yes` is your confirmation, not a convenience flag.
+- **Revise and publish agents with the typed commands.** Prefer `ingfah agents revise SLUG` and `ingfah agents publish SLUG --revision ID` over raw `ingfah api` calls. `revise` copies every field from the newest revision and the tool links from the agent, then reads the new revision back. `publish` refuses a revision that is not the newest or that drops a tool, and re-reads the agent afterwards.
+- **Keep the key out of the chat.** The CLI reads `INGFAH_API_KEY`, or the key stored by `ingfah auth login`. Suggest the user run `ingfah auth login` in their own terminal. It prompts for the key and keeps it in the system keyring.
 
 ## Naming: what the user calls things
 
@@ -255,7 +272,6 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `GET /client/text-channel-configs`
 - `GET /client/text-channel-configs/{id}`
 - `GET /client/text-channel-config-providers`
-- `GET /client/text-chats/channel-configs`, `/providers`, `/{id}` (same data as the three above)
 
 ### `client_products:write`
 

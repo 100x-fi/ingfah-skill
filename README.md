@@ -104,6 +104,14 @@ mkdir -p ~/.claude/skills
 ln -s ~/src/ingfah-skill ~/.claude/skills/ingfah
 ```
 
+### With the `ingfah` CLI
+
+When the [`ingfah` CLI](https://github.com/100x-fi/ingfah-client-cli) 0.1.0
+or newer is installed, the agent may use it instead of the script. It adds
+stronger guards for revising and publishing agents, and `ingfah auth login`
+keeps the key in the system keyring. Install instructions are in its README.
+Python 3 stays the only requirement.
+
 ## Providing the API key
 
 The script reads `INGFAH_API_KEY` from the environment. Give it to the agent

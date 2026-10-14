@@ -14,6 +14,7 @@ Worth reporting, for example:
 
 - a request that reaches a route outside the allowlist in `SKILL.md`
 - a mutation that goes through without `--confirm`
+- an `ingfah` CLI write sent with `--yes` before the user confirmed it
 - an API key, webhook header, or `hmac_secret` appearing in output, logs, or
   files
 - instructions in `SKILL.md` or `references/` that lead an agent to leak data
