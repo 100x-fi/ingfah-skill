@@ -32,7 +32,8 @@ bound: put its id in `text_chat_tools` on a new revision of a **text** agent,
 then publish that revision. An audio agent's `text_chat_tools` are dropped.
 `text_chat_tools` is one of the lists every later revision must re-send (see
 `agents-and-teams.md` → "Carry the tools into every revision"). The script
-refuses a text agent's revision that would drop it.
+refuses a text agent's revision that would drop it, and so do
+`ingfah agents revise` and `ingfah agents publish` when the CLI is installed.
 
 ## What to settle with the client first
 
