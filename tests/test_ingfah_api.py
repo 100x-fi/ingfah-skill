@@ -247,6 +247,20 @@ class IngfahApiTests(unittest.TestCase):
         # Channel writes stay dashboard-only: they store messaging credentials.
         self.assertFalse(ingfah_api._is_allowed("POST", "/client/text-channel-configs"))
 
+    def test_text_chats_channel_config_alias_is_rejected(self):
+        for path in (
+            "/client/text-chats/channel-configs",
+            "/client/text-chats/channel-configs/providers",
+            "/client/text-chats/channel-configs/4",
+        ):
+            self.assertFalse(ingfah_api._is_allowed("GET", path), path)
+        for path in (
+            "/client/text-channel-configs",
+            "/client/text-channel-configs/4",
+            "/client/text-channel-config-providers",
+        ):
+            self.assertTrue(ingfah_api._is_allowed("GET", path), path)
+
     def test_template_writes_and_publish_latest_need_confirmation(self):
         for method, path in (
             ("POST", "/client/outbound/options"),

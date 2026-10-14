@@ -40,7 +40,6 @@ ROUTE_PATTERNS = (
     ("DELETE", re.compile(r"^/client/products/[^/]+/postprocessors/[^/]+$")),
     ("GET", re.compile(r"^/client/(text-channel-config-providers|text-channel-configs)$")),
     ("GET", re.compile(r"^/client/text-channel-configs/[^/]+$")),
-    ("GET", re.compile(r"^/client/text-chats/channel-configs(?:/[^/]+)?$")),
     ("GET", re.compile(r"^/client/(ai-agents|agent-templates|phone-tools|text-chat-tools|voices)$")),
     ("GET", re.compile(r"^/client/plugin-function-integrations$")),
     ("GET", re.compile(r"^/client/plugin-functions(?:/[^/]+)?$")),

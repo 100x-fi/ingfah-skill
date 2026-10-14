@@ -255,7 +255,6 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `GET /client/text-channel-configs`
 - `GET /client/text-channel-configs/{id}`
 - `GET /client/text-channel-config-providers`
-- `GET /client/text-chats/channel-configs`, `/providers`, `/{id}` (same data as the three above)
 
 ### `client_products:write`
 
