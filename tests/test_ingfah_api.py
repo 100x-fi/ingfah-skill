@@ -84,6 +84,23 @@ class IngfahApiTests(unittest.TestCase):
             captured["request"].get_header("User-agent"), f"ingfah-skill/{ingfah_api.__version__}"
         )
 
+    def test_warns_when_python_cannot_use_tls13(self):
+        stderr = io.StringIO()
+        with patch.dict(os.environ, {"INGFAH_API_KEY": "secret-key"}, clear=False), patch(
+            "scripts.ingfah_api.ssl.HAS_TLSv1_3", False
+        ), patch(
+            "scripts.ingfah_api.urllib.request.urlopen",
+            return_value=FakeResponse(b'{"data":[]}', 200),
+        ), redirect_stdout(io.StringIO()), redirect_stderr(stderr):
+            code = ingfah_api.main(["GET", "/client/products"])
+
+        self.assertEqual(code, 0)
+        self.assertIn("cannot use TLS 1.3", stderr.getvalue())
+
+    def test_no_tls_warning_when_python_supports_tls13(self):
+        with patch("scripts.ingfah_api.ssl.HAS_TLSv1_3", True):
+            self.assertIsNone(ingfah_api.tls13_warning())
+
     def test_rejects_route_outside_skill_allowlist(self):
         with patch.dict(os.environ, {"INGFAH_API_KEY": "secret-key"}, clear=False):
             with self.assertRaises(ingfah_api.ClientError):
