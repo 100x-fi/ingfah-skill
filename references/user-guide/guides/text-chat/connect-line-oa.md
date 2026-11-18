@@ -7,7 +7,7 @@
 นอกจากรับสายและโทรออกแล้ว AI Agent ของ ingfah ยังตอบแชทลูกค้าผ่าน LINE Official Account (LINE OA) ได้ โดยเชื่อมต่อผ่านเมนู **"ช่องทางติดต่อ"**
 
 :::note[แพลตฟอร์มที่รองรับ]
-ตอนนี้รองรับ **LINE OA** ส่วน **FB Messenger** และ **Instagram** จะเปิดให้ใช้งานเร็วๆ นี้
+หน้านี้อธิบายการเชื่อมต่อ **LINE OA** ส่วน **FB Messenger** ดูที่[เชื่อมต่อ Facebook Messenger](/guides/contact-channels/connect-facebook-messenger) และ **Instagram** ดูที่[เชื่อมต่อ Instagram](/guides/contact-channels/connect-instagram)
 :::
 
 ## ก่อนเริ่ม
