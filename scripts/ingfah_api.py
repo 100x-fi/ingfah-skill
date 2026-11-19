@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import re
+import ssl
 import sys
 import urllib.error
 import urllib.request
@@ -377,6 +378,22 @@ def _save_body(body: Any, path: str) -> int:
     return len(data)
 
 
+def tls13_warning() -> str | None:
+    """Explain the fix when this Python cannot negotiate TLS 1.3.
+
+    The python3 that ships with macOS links LibreSSL 2.8.3, which tops out at
+    TLS 1.2. Ingfah plans to require TLS 1.3, so such a Python will stop
+    reaching the API.
+    """
+    if ssl.HAS_TLSv1_3:
+        return None
+    return (
+        f"warning: this Python ({sys.executable}, {ssl.OPENSSL_VERSION}) cannot use TLS 1.3, "
+        "which Ingfah will soon require. Install the ingfah CLI, or run this script "
+        "with a Python from python.org or Homebrew."
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Call an allowlisted Ingfah client API route")
     parser.add_argument("method", choices=("GET", "POST", "PUT", "PATCH", "DELETE"))
@@ -391,6 +408,10 @@ def main(argv: list[str] | None = None) -> int:
         help="allow a new revision to unbind tools the published agent uses (only when that is the intended change)",
     )
     args = parser.parse_args(argv)
+
+    warning = tls13_warning()
+    if warning:
+        print(warning, file=sys.stderr)
 
     try:
         if args.output and os.path.exists(args.output):

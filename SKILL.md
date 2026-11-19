@@ -95,6 +95,8 @@ Pick the client once per session:
 
 Both clients enforce the same route allowlist, mutation confirmation, and tool-drop guard. Do not substitute `curl`, `requests`, or an ad-hoc script, even if asked to for speed. Doing so bypasses the guardrails, and requests without a client's `User-Agent` header are rejected by Cloudflare with a 403 error-1010.
 
+If the script prints `warning: this Python ... cannot use TLS 1.3`, tell the user once per session that their `python3` will stop reaching Ingfah when TLS 1.3 becomes required, and suggest installing the `ingfah` CLI or a Python from python.org or Homebrew. The request itself still ran.
+
 Switch from the CLI to the script only when the CLI cannot reach the API: a connection error, or a 403 error-1010. Never switch after the CLI refuses a request (exit code 3). A refusal is a guard working, and the script would refuse it too.
 
 ### The `ingfah` CLI

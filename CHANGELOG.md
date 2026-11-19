@@ -18,6 +18,15 @@ request `User-Agent` as `ingfah-skill/<version>`.
 - Hard denylist for `POST /v1/synthesize` (`NEVER_ALLOW_PATTERNS`); it uses
   `speechBearer` and must never be added to the skill allowlist.
 
+## [1.9.2] — 2026-11-05
+
+### Added
+
+- `scripts/ingfah_api.py` warns on stderr when its Python cannot negotiate
+  TLS 1.3, such as the `python3` that ships with macOS (LibreSSL 2.8.3).
+  Ingfah plans to require TLS 1.3; the warning points to the `ingfah` CLI or
+  a Python from python.org or Homebrew.
+
 ## [1.9.1] — 2026-10-14
 
 ### Changed
@@ -305,6 +314,7 @@ First versioned release.
   moved from `SKILL.md` into `references/`, so less loads on every use.
 - Install and update through the `skills` CLI; MIT license.
 
+[1.9.2]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.9.2
 [1.7.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.7.0
 [1.6.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.6.0
 [1.5.1]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.5.1
