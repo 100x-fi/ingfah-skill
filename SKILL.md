@@ -281,6 +281,7 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `GET /client/text-channel-configs`
 - `GET /client/text-channel-configs/{id}`
 - `GET /client/text-channel-config-providers`
+- `GET /client/products/{id}/tts-dictionaries`
 
 ### `client_products:write`
 
@@ -294,15 +295,22 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `POST /client/products/{id}/postprocessors`
 - `PUT /client/products/{id}/postprocessors/{postprocessorId}`
 - `DELETE /client/products/{id}/postprocessors/{postprocessorId}`
+- `POST /client/products/{id}/tts-dictionaries`
+- `PUT /client/products/{id}/tts-dictionaries`
+- `DELETE /client/products/{id}/tts-dictionaries/{ttsDictionaryId}`
 
 ### `ai_agents:read`
 
 - `GET /client/ai-agents`
+- `GET /client/ai-agents/browse`
+- `GET /client/ai-agent-folders`
 - `GET /client/agent-templates`
 - `GET /client/agents/{slug}`
 - `GET /client/agents/{slug}/revisions`
 - `GET /client/agents/{slug}/revisions/{id}`
 - `GET /client/phone-tools`
+- `GET /client/phone-tools/catalog`
+- `GET /client/phone-tools/{id}`
 - `GET /client/text-chat-tools`
 - `GET /client/plugin-functions`
 - `GET /client/plugin-functions/{id}`
@@ -316,15 +324,24 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `PUT /client/agents/{slug}/profile`
 - `PUT /client/agents/{slug}/description`
 - `PUT /client/agents/{slug}/visibility`
+- `PUT /client/agents/{slug}/folder`
+- `POST /client/ai-agent-folders`
+- `PUT /client/ai-agent-folders/{id}`
+- `PUT /client/ai-agent-folders/{id}/parent`
+- `DELETE /client/ai-agent-folders/{id}`
 - `POST /client/agents/{slug}/revisions`
 - `POST /client/agents/{slug}/revisions/{id}/publish`
 - `POST /client/agents/{slug}/publish` (publishes the newest revision; prefer the route above, which fails if someone drafted after you)
 - `DELETE /client/agents/{slug}/revisions/{id}`
+- `POST /client/phone-tools`
+- `PATCH /client/phone-tools/{id}`
+- `DELETE /client/phone-tools/{id}`
 - `POST /client/plugin-functions`
 - `PUT /client/plugin-functions/{id}`
 - `DELETE /client/plugin-functions/{id}`
 - `POST /client/plugin-functions/{id}/duplicate`
 - `POST /client/plugin-functions/{id}/test-run`
+- `POST /client/plugin-functions/test-code`
 
 ### `chat_sessions:read`
 
@@ -337,6 +354,8 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `GET /client/chat-sessions-list/csv`
 - `GET /client/agents/{slug}/chat-session-tests`
 - `GET /client/agents/{slug}/chat-session-tests/{uuid}`
+- `GET /client/products/{id}/chat-session-tests`
+- `GET /client/products/{id}/chat-session-tests/{uuid}`
 - `GET /client/text-chats/conversations`
 - `GET /client/text-chats/tags`
 - `GET /client/text-chats/conversations/{uuid}`
@@ -374,17 +393,66 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 
 ### `client_outbound_batches:read`
 
+- `GET /client/outbound/batches`
 - `GET /client/outbound/batches/{id}`
 - `GET /client/outbound/batches/{id}/records`
+- `GET /client/outbound/batches/{id}/records-summary`
 - `GET /client/outbound/batches/{id}/records/download`
 - `GET /client/outbound/call-data-records`
 
 ### `client_outbound_batches:write`
 
 - `POST /client/outbound/batches`
+- `PATCH /client/outbound/batches/{id}/records/{recordId}`
 - `POST /client/outbound/batches/{id}/pause`
 - `POST /client/outbound/batches/{id}/resume`
 - `POST /client/outbound/batches/{id}/cancel`
+
+### `tts_dictionaries:read`
+
+- `GET /client/tts-dictionaries`
+- `GET /client/tts-dictionaries/{id}`
+- `GET /client/tts-dictionaries/{id}/csv`
+- `GET /client/tts-dictionaries/{id}/words`
+
+### `tts_dictionaries:write`
+
+- `POST /client/tts-dictionaries`
+- `PUT /client/tts-dictionaries/{id}`
+- `DELETE /client/tts-dictionaries/{id}`
+- `POST /client/tts-dictionaries/{id}/csv`
+- `POST /client/tts-dictionaries/{id}/words`
+- `PUT /client/tts-dictionaries/{id}/words/{wordId}`
+- `DELETE /client/tts-dictionaries/{id}/words/{wordId}`
+
+### `secrets:write`
+
+- `GET /client/secrets` (list; scope name is write)
+- `POST /client/secrets`
+- `PUT /client/secrets/{id}`
+- `DELETE /client/secrets/{id}`
+
+### `share_links:read`
+
+- `GET /client/share-links`
+- `GET /client/share-links/{id}/views`
+
+### `share_links:write`
+
+- `POST /client/share-links`
+- `DELETE /client/share-links/{id}`
+
+### `crm_client_users:read`
+
+- `GET /crm/user`
+- `GET /crm/users`
+- `GET /crm/users/{id}`
+
+### `crm_client_users:write`
+
+- `POST /crm/user`
+- `PATCH /crm/user`
+- `PATCH /crm/users/{id}`
 
 ### `inbound_admission:read`
 
@@ -397,7 +465,7 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 Before calling an endpoint, identify its required scope and check the user's intended action against that scope. If the API returns an authorization or insufficient-scope error, explain the missing scope without exposing the API key.
 
 The automation routes are live but absent from the OpenAPI spec; see
-`references/automations.md`. Do not call backoffice routes, API-key management routes, or client routes not listed in this file. Do not infer that a JWT-only route is available to an API-key caller.
+`references/automations.md`. Do not call backoffice routes, API-key management routes, or client routes not listed in this file. Do not infer that a JWT-only route is available to an API-key caller. Never call `POST /v1/synthesize` through this skill: it uses `speechBearer`, not a client API key, and is hard-denied in `scripts/ingfah_api.py`.
 
 ## Rules that apply in every area
 

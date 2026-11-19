@@ -4,6 +4,20 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.10.0] — 2026-11-19
+
+### Added
+
+- Client API allowlist coverage for TTS dictionaries (and product bindings),
+  secrets, share links, AI agent folders, phone-tool writes, plugin
+  `test-code`, outbound batch list / records-summary / record PATCH, product
+  chat-session tests, and CRM user routes (`/crm/user`, `/crm/users`).
+- Bundled user guide pages for TTS Dictionary, account settings, admin
+  settings, Facebook/Instagram connect, and the privacy policy (synced from
+  `ingfah-public-docs`).
+- Hard denylist for `POST /v1/synthesize` (`NEVER_ALLOW_PATTERNS`); it uses
+  `speechBearer` and must never be added to the skill allowlist.
+
 ## [1.9.2] — 2026-11-05
 
 ### Added

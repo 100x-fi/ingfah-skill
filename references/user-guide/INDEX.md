@@ -3,7 +3,7 @@
 A copy of the public Thai user guide at https://docs.ingfah.ai, one file per page.
 Do not edit these files by hand; regenerate them with
 `python3 scripts/sync_user_guide.py`.
-Copied from docs commit efd06de (2026-10-09).
+Copied from docs commit e8a5836 (2026-11-19).
 
 A link inside a page such as `/guides/ai-agent/try-call` is the file
 `guides/ai-agent/try-call.md` in this folder, and the public page
@@ -76,6 +76,8 @@ A link inside a page such as `/guides/ai-agent/try-call` is the file
 - `guides/ingfah-skill/automated-testing.md` — **ชุดทดสอบอัตโนมัติ**: ให้ AI ตั้งชุดทดสอบที่จำลองบทสนทนาหลายสิบแบบกับ AI Agent และตรวจผลให้อัตโนมัติทุกครั้งที่แก้ไข
 - `guides/ingfah-skill/faq.md` — **คำถามที่พบบ่อยและแก้ไขปัญหา**: คำถามที่พบบ่อยเกี่ยวกับ Skill ingfah และวิธีแก้ปัญหาการติดตั้ง การเชื่อมต่อ และการใช้งาน
 - `guides/contact-channels/connect-line-oa.md` — **เชื่อมต่อ LINE Official Account**: เชื่อม LINE OA เข้ากับอิงฟ้า เพื่อให้ทีม AI Agent ตอบแชทลูกค้าผ่าน LINE
+- `guides/contact-channels/connect-facebook-messenger.md` — **เชื่อมต่อ Facebook Messenger**: เชื่อม Facebook Page เข้ากับอิงฟ้า เพื่อให้ทีม AI Agent ตอบแชทลูกค้าผ่าน Messenger
+- `guides/contact-channels/connect-instagram.md` — **เชื่อมต่อ Instagram**: เชื่อมบัญชี Instagram เข้ากับอิงฟ้า เพื่อให้ทีม AI Agent ตอบแชทลูกค้าผ่าน Instagram Direct
 - `guides/inbound-outbound/create-ai-agent-team.md` — **สร้างทีม AI Agent**: คู่มือการสร้างและจัดการทีม AI Agent สำหรับระบบโทรเข้าและโทรออก
 - `guides/inbound-outbound/team-automations.md` — **ตั้งค่าการทำงานอัตโนมัติของทีม AI Agent**: เลือกให้ทีมทำงานเมื่อเริ่ม ส่งต่อ หรือจบการสนทนา
 - `guides/inbound-outbound/multi-agent-team.md` — **ออกแบบทีมหลาย AI Agent**: แนวทางแบ่งงาน ส่งต่อสาย เขียน Prompt ทดสอบ และเปิดใช้งานทีมที่มี AI Agent หลายตัวคุยต่อกันในสายเดียว ให้พร้อมใช้งานจริง
@@ -83,16 +85,26 @@ A link inside a page such as `/guides/ai-agent/try-call` is the file
 - `guides/inbound-outbound/customer-template.md` — **เทมเพลตข้อมูลลูกค้า**: ตั้งค่าคอลัมน์ข้อมูลลูกค้าที่ใช้ซ้ำในแคมเปญโทรออก
 - `guides/inbound-outbound/outbound-batch.md` — **สร้างแคมเปญโทรออก**: วิธีสร้างแคมเปญโทรออกแบบ Batch ด้วย AI Agent ทีละขั้นตอน
 - `guides/inbound-outbound/speech-preview.md` — **ฟังตัวอย่างเสียงจากข้อมูลลูกค้า**: ทดสอบว่า AI Agent อ่านค่าในไฟล์ CSV อย่างไรก่อนสร้างแคมเปญโทรออก
-- `guides/inbound-outbound/follow-up-calls.md` — **ตั้งค่าโทรติดตามตามเวลาที่ลูกค้าขอ**: เปิดการโทรกลับในแคมเปญโทรออกและตรวจสอบสายที่รอโทรกลับ
+- `guides/inbound-outbound/follow-up-calls.md` — **โทรกลับตามนัด**: เปิดการโทรกลับในแคมเปญโทรออกและตรวจสอบสายที่รอโทรกลับ
 - `guides/inbound-outbound/outbound-batch-management.md` — **การจัดการแคมเปญโทรออก (Batch)**: วิธีหยุดชั่วคราว ดำเนินการต่อ และยกเลิกแคมเปญโทรออก
 - `guides/inbound-outbound/call-outcome-setup.md` — **ผลลัพธ์หลังจบการสนทนา**: กำหนดและวิเคราะห์ผลลัพธ์ของการสนทนาสำหรับทีม AI Agent ทุกประเภท
 - `guides/inbound-outbound/outcome-metadata.md` — **ผลลัพธ์แบบ Metadata (JSON)**: ให้ระบบสรุปข้อมูลจากบทสนทนาออกมาเป็น JSON ตามโครงสร้างที่คุณกำหนด
+- `guides/tts-dictionary/overview.md` — **ภาพรวม TTS Dictionary**: TTS Dictionary คือรายการคำศัพท์ที่บอก AI Agent ว่าต้องอ่านออกเสียงคำไหนอย่างไร
+- `guides/tts-dictionary/create.md` — **สร้าง Dictionary และเพิ่มคำศัพท์**: สร้าง Dictionary ชุดใหม่ เพิ่มคำศัพท์และคำอ่าน พร้อมฟังเสียงที่ AI Agent อ่าน
+- `guides/tts-dictionary/csv.md` — **นำเข้าและส่งออกไฟล์ CSV**: นำเข้าไฟล์ CSV เพื่อเพิ่มหรือแก้คำศัพท์หลายคำในครั้งเดียว และส่งออกเพื่อแก้ใน Excel หรือ Google Sheets
+- `guides/tts-dictionary/assign.md` — **เชื่อม Dictionary กับทีม AI Agent**: เชื่อม Dictionary กับทีม AI Agent เพื่อให้ AI Agent ทุกตัวในทีมอ่านคำตามที่กำหนดตั้งแต่สายถัดไป
+- `guides/tts-dictionary/edit.md` — **ค้นหา แก้ไขและลบ Dictionary**: ค้นหา แก้คำอ่าน ลบคำศัพท์ เปลี่ยนชื่อ หรือลบ Dictionary ทั้งชุด
 - `guides/text-chat/connect-line-oa.md` — **เชื่อมต่อ LINE OA ให้ AI Agent ตอบแชท**: เพิ่มช่องทางติดต่อ LINE OA และเลือกทีม AI Agent ที่จะตอบแชทลูกค้าอัตโนมัติ
 - `guides/text-chat/chat-sessions.md` — **จัดการแชทกับลูกค้า**: ติดตามแชทที่ AI Agent ตอบ รับช่วงตอบเอง มอบหมายผู้ดูแล และปิดการสนทนา
 - `guides/text-chat/text-analytics.md` — **แดชบอร์ดแชทข้อความ**: ดูภาพรวมการตอบแชท จำนวนลูกค้า ผลลัพธ์ และช่วงเวลาที่มีข้อความมากที่สุด
 - `guides/inbound-outbound/all-calls.md` — **สายและแชททั้งหมด**: ค้นหา กรอง และส่งออกประวัติการโทรและแชทข้อความ
 - `guides/reports/text-analytics.md` — **ดูสถิติแชทข้อความ**: อ่านผลรวม แนวโน้มรายชั่วโมง และช่วงเวลาที่ลูกค้าส่งข้อความมาก
 - `guides/reports/voice-heatmap.md` — **ดูช่วงเวลาที่มีสายโทรมาก**: ใช้แผนภูมิความร้อนในแดชบอร์ดวิเคราะห์จำนวนสายตามวันและชั่วโมง
+- `guides/account-settings/overview.md` — **ภาพรวมการตั้งค่าบัญชี**: หน้า บัญชีของฉัน รวมการตั้งค่าที่เป็นของคุณคนเดียว ได้แก่ ข้อมูลโปรไฟล์ วิธีเข้าสู่ระบบ และอีเมลแจ้งเตือน การเปลี่ยนแปลงในหน้านี้มีผลกับบ...
+- `guides/account-settings/change-password.md` — **การเปลี่ยนรหัสผ่าน**: เปลี่ยนรหัสผ่านได้เองจากหน้า บัญชีของฉัน เช่น เมื่อสงสัยว่ามีคนอื่นรู้รหัสผ่าน หรือได้อีเมลแจ้งการเข้าสู่ระบบที่คุณไม่ได้ทำ หลังเปลี่ยน อ...
+- `guides/account-settings/two-factor.md` — **การยืนยันตัวตนแบบสองขั้นตอน (2FA)**: 2FA ให้ระบบขอรหัส 6 หลักจากแอปยืนยันตัวตนบนโทรศัพท์เพิ่มจากรหัสผ่าน ถึงจะมีคนรู้รหัสผ่านของคุณ ก็เข้าสู่ระบบไม่ได้ถ้าไม่มีโทรศัพท์เครื่อง...
+- `guides/account-settings/passkey.md` — **การเพิ่ม Passkey**: Passkey ให้คุณเข้าสู่ระบบด้วยลายนิ้วมือ Face ID หรือ PIN ของอุปกรณ์ แทนการพิมพ์รหัสผ่าน เหมาะกับเครื่องที่ใช้ประจำ เช่น โน้ตบุ๊กที่ทำงาน ...
+- `guides/settings/admin-settings.md` — **การตั้งค่าแอดมิน**: หน้า ตั้งค่าแอดมิน ใช้ดูแลรายชื่อแอดมินขององค์กร สิทธิ์ Owner เพิ่ม แก้ไข และลบแอดมินได้เอง ไม่ต้องรอทีม ingfah เหมาะเมื่อมีคนเข้ามาทำงาน...
 - `guides/settings/user-roles.md` — **สิทธิ์ผู้ใช้งาน**: ทำความเข้าใจสิทธิ์ Owner และ Operator ว่าแต่ละสิทธิ์เข้าถึงอะไรได้บ้าง พร้อมวิธีให้สิทธิ์ Guest แบบชั่วคราว
 - `guides/settings/api-keys.md` — **API Keys**: สร้างและจัดการ API Key สำหรับเชื่อมต่อระบบภายนอกเข้ากับแพลตฟอร์มอิงฟ้า
 - `guides/settings/billing.md` — **บิลและการใช้งาน**: ดูโควต้าตามแพ็กเกจ ปริมาณการใช้งานในรอบบิล และดาวน์โหลดใบแจ้งหนี้/ใบเสร็จ
@@ -102,3 +114,7 @@ A link inside a page such as `/guides/ai-agent/try-call` is the file
 ## บันทึกการอัปเดต (Release Notes)
 
 - `release-notes.md` — **Release Notes**: สรุปรายการอัปเดต ฟีเจอร์ใหม่ การปรับปรุงประสิทธิภาพ และการแก้ไขข้อบกพร่องของแพลตฟอร์ม ingfah
+
+## legal
+
+- `legal/privacy-policy.md` — **นโยบายความเป็นส่วนตัว**: นโยบายความเป็นส่วนตัวของบริษัท ร้อยเอ็กซ์ จำกัด ผู้ให้บริการ ingfah.ai ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562
