@@ -3,7 +3,7 @@
 A copy of the public Thai user guide at https://docs.ingfah.ai, one file per page.
 Do not edit these files by hand; regenerate them with
 `python3 scripts/sync_user_guide.py`.
-Copied from docs commit 4d73033 (2026-11-17).
+Copied from docs commit e8a5836 (2026-11-19).
 
 A link inside a page such as `/guides/ai-agent/try-call` is the file
 `guides/ai-agent/try-call.md` in this folder, and the public page

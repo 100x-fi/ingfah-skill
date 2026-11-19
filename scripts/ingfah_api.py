@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 
-__version__ = "1.9.1"
+__version__ = "1.10.0"
 
 DEFAULT_BASE_URL = "https://api.ingfah.ai"
 API_KEY_ENV = "INGFAH_API_KEY"
@@ -38,20 +38,52 @@ ROUTE_PATTERNS = (
     ("POST", re.compile(r"^/client/products/[^/]+/postprocessors$")),
     ("PUT", re.compile(r"^/client/products/[^/]+/postprocessors/[^/]+$")),
     ("DELETE", re.compile(r"^/client/products/[^/]+/postprocessors/[^/]+$")),
+    ("GET", re.compile(r"^/client/products/[^/]+/tts-dictionaries$")),
+    ("POST", re.compile(r"^/client/products/[^/]+/tts-dictionaries$")),
+    ("PUT", re.compile(r"^/client/products/[^/]+/tts-dictionaries$")),
+    ("DELETE", re.compile(r"^/client/products/[^/]+/tts-dictionaries/[^/]+$")),
+    ("GET", re.compile(r"^/client/products/[^/]+/chat-session-tests(?:/[^/]+)?$")),
     ("GET", re.compile(r"^/client/(text-channel-config-providers|text-channel-configs)$")),
     ("GET", re.compile(r"^/client/text-channel-configs/[^/]+$")),
-    ("GET", re.compile(r"^/client/(ai-agents|agent-templates|phone-tools|text-chat-tools|voices)$")),
+    ("GET", re.compile(r"^/client/(ai-agents|ai-agent-folders|agent-templates|phone-tools|text-chat-tools|voices)$")),
+    ("GET", re.compile(r"^/client/ai-agents/browse$")),
+    ("GET", re.compile(r"^/client/phone-tools/catalog$")),
+    ("GET", re.compile(r"^/client/phone-tools/[^/]+$")),
+    ("POST", re.compile(r"^/client/phone-tools$")),
+    ("PATCH", re.compile(r"^/client/phone-tools/[^/]+$")),
+    ("DELETE", re.compile(r"^/client/phone-tools/[^/]+$")),
+    ("POST", re.compile(r"^/client/ai-agent-folders$")),
+    ("PUT", re.compile(r"^/client/ai-agent-folders/[^/]+$")),
+    ("PUT", re.compile(r"^/client/ai-agent-folders/[^/]+/parent$")),
+    ("DELETE", re.compile(r"^/client/ai-agent-folders/[^/]+$")),
     ("GET", re.compile(r"^/client/plugin-function-integrations$")),
     ("GET", re.compile(r"^/client/plugin-functions(?:/[^/]+)?$")),
     ("POST", re.compile(r"^/client/plugin-functions$")),
     ("PUT", re.compile(r"^/client/plugin-functions/[^/]+$")),
     ("DELETE", re.compile(r"^/client/plugin-functions/[^/]+$")),
     ("POST", re.compile(r"^/client/plugin-functions/[^/]+/(duplicate|test-run)$")),
+    ("POST", re.compile(r"^/client/plugin-functions/test-code$")),
+    ("GET", re.compile(r"^/client/tts-dictionaries(?:/[^/]+)?$")),
+    ("GET", re.compile(r"^/client/tts-dictionaries/[^/]+/(csv|words)$")),
+    ("POST", re.compile(r"^/client/tts-dictionaries$")),
+    ("POST", re.compile(r"^/client/tts-dictionaries/[^/]+/(csv|words)$")),
+    ("PUT", re.compile(r"^/client/tts-dictionaries/[^/]+$")),
+    ("PUT", re.compile(r"^/client/tts-dictionaries/[^/]+/words/[^/]+$")),
+    ("DELETE", re.compile(r"^/client/tts-dictionaries/[^/]+$")),
+    ("DELETE", re.compile(r"^/client/tts-dictionaries/[^/]+/words/[^/]+$")),
+    ("GET", re.compile(r"^/client/secrets$")),
+    ("POST", re.compile(r"^/client/secrets$")),
+    ("PUT", re.compile(r"^/client/secrets/[^/]+$")),
+    ("DELETE", re.compile(r"^/client/secrets/[^/]+$")),
+    ("GET", re.compile(r"^/client/share-links$")),
+    ("GET", re.compile(r"^/client/share-links/[^/]+/views$")),
+    ("POST", re.compile(r"^/client/share-links$")),
+    ("DELETE", re.compile(r"^/client/share-links/[^/]+$")),
     ("GET", re.compile(r"^/client/agents/[^/]+$")),
     ("GET", re.compile(r"^/client/agents/[^/]+/revisions(?:/[^/]+)?$")),
     ("POST", re.compile(r"^/client/agents$")),
     ("DELETE", re.compile(r"^/client/agents/[^/]+$")),
-    ("PUT", re.compile(r"^/client/agents/[^/]+/(profile|description|visibility)$")),
+    ("PUT", re.compile(r"^/client/agents/[^/]+/(profile|description|visibility|folder)$")),
     ("POST", re.compile(r"^/client/agents/[^/]+/revisions$")),
     ("POST", re.compile(r"^/client/agents/[^/]+/revisions/[^/]+/publish$")),
     ("POST", re.compile(r"^/client/agents/[^/]+/publish$")),
@@ -74,11 +106,25 @@ ROUTE_PATTERNS = (
     ("PUT", re.compile(r"^/client/outbound/options/[^/]+$")),
     ("DELETE", re.compile(r"^/client/outbound/options/[^/]+$")),
     ("GET", re.compile(r"^/client/outbound/call-data-records$")),
+    ("GET", re.compile(r"^/client/outbound/batches$")),
     ("GET", re.compile(r"^/client/outbound/batches/[^/]+$")),
     ("GET", re.compile(r"^/client/outbound/batches/[^/]+/records$")),
+    ("GET", re.compile(r"^/client/outbound/batches/[^/]+/records-summary$")),
     ("GET", re.compile(r"^/client/outbound/batches/[^/]+/records/download$")),
+    ("PATCH", re.compile(r"^/client/outbound/batches/[^/]+/records/[^/]+$")),
     ("POST", re.compile(r"^/client/outbound/batches$")),
     ("POST", re.compile(r"^/client/outbound/batches/[^/]+/(pause|resume|cancel)$")),
+    ("GET", re.compile(r"^/crm/user$")),
+    ("GET", re.compile(r"^/crm/users(?:/[^/]+)?$")),
+    ("POST", re.compile(r"^/crm/user$")),
+    ("PATCH", re.compile(r"^/crm/user$")),
+    ("PATCH", re.compile(r"^/crm/users/[^/]+$")),
+)
+
+# Hard denylist. These must never enter ROUTE_PATTERNS. Speech synthesize uses
+# speechBearer, not a client API key; keep it out of the skill forever.
+NEVER_ALLOW_PATTERNS = (
+    ("POST", re.compile(r"^/v1/synthesize$")),
 )
 
 
@@ -114,7 +160,16 @@ class ApiResponse:
     content_type: str = "application/json"
 
 
+def _is_never_allowed(method: str, path: str) -> bool:
+    return any(
+        denied_method == method and pattern.fullmatch(path)
+        for denied_method, pattern in NEVER_ALLOW_PATTERNS
+    )
+
+
 def _is_allowed(method: str, path: str) -> bool:
+    if _is_never_allowed(method, path):
+        return False
     return any(allowed_method == method and pattern.fullmatch(path) for allowed_method, pattern in ROUTE_PATTERNS)
 
 

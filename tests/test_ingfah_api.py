@@ -176,6 +176,7 @@ class IngfahApiTests(unittest.TestCase):
         for method, path in (
             ("PUT", "/client/agents/my-agent/description"),
             ("PUT", "/client/agents/my-agent/visibility"),
+            ("PUT", "/client/agents/my-agent/folder"),
             ("POST", "/client/agents/my-agent/revisions"),
             ("POST", "/client/agents/my-agent/revisions/12/publish"),
             ("DELETE", "/client/agents/my-agent/revisions/12"),
@@ -185,6 +186,46 @@ class IngfahApiTests(unittest.TestCase):
         ):
             self.assertTrue(ingfah_api._is_allowed(method, path), f"{method} {path}")
             self.assertTrue(ingfah_api._is_mutation(method, path), f"{method} {path}")
+
+    def test_new_platform_routes_are_allowed(self):
+        for method, path in (
+            ("GET", "/client/tts-dictionaries"),
+            ("GET", "/client/tts-dictionaries/3/words"),
+            ("POST", "/client/tts-dictionaries"),
+            ("PUT", "/client/tts-dictionaries/3/words/9"),
+            ("DELETE", "/client/products/227/tts-dictionaries/3"),
+            ("GET", "/client/secrets"),
+            ("POST", "/client/secrets"),
+            ("DELETE", "/client/secrets/4"),
+            ("GET", "/client/share-links"),
+            ("POST", "/client/share-links"),
+            ("GET", "/client/ai-agent-folders"),
+            ("POST", "/client/ai-agent-folders"),
+            ("GET", "/client/phone-tools/catalog"),
+            ("POST", "/client/phone-tools"),
+            ("PATCH", "/client/phone-tools/8"),
+            ("POST", "/client/plugin-functions/test-code"),
+            ("GET", "/client/outbound/batches"),
+            ("GET", "/client/outbound/batches/7/records-summary"),
+            ("PATCH", "/client/outbound/batches/7/records/12"),
+            ("GET", "/client/products/227/chat-session-tests"),
+            ("GET", "/crm/user"),
+            ("GET", "/crm/users"),
+            ("GET", "/crm/users/5"),
+            ("POST", "/crm/user"),
+            ("PATCH", "/crm/user"),
+            ("PATCH", "/crm/users/5"),
+        ):
+            self.assertTrue(ingfah_api._is_allowed(method, path), f"{method} {path}")
+        # Speech synthesize is speechBearer, not a client API key.
+        self.assertTrue(ingfah_api._is_never_allowed("POST", "/v1/synthesize"))
+        self.assertFalse(ingfah_api._is_allowed("POST", "/v1/synthesize"))
+        self.assertFalse(
+            any(
+                method == "POST" and pattern.fullmatch("/v1/synthesize")
+                for method, pattern in ingfah_api.ROUTE_PATTERNS
+            )
+        )
 
     def test_product_detail_read_is_allowed(self):
         self.assertTrue(ingfah_api._is_allowed("GET", "/client/products/227"))
