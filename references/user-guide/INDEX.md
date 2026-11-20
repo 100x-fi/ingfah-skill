@@ -3,7 +3,7 @@
 A copy of the public Thai user guide at https://docs.ingfah.ai, one file per page.
 Do not edit these files by hand; regenerate them with
 `python3 scripts/sync_user_guide.py`.
-Copied from docs commit e8a5836 (2026-11-19).
+Copied from docs commit 82a47b1 (2026-11-19).
 
 A link inside a page such as `/guides/ai-agent/try-call` is the file
 `guides/ai-agent/try-call.md` in this folder, and the public page
@@ -106,7 +106,8 @@ A link inside a page such as `/guides/ai-agent/try-call` is the file
 - `guides/account-settings/passkey.md` — **การเพิ่ม Passkey**: Passkey ให้คุณเข้าสู่ระบบด้วยลายนิ้วมือ Face ID หรือ PIN ของอุปกรณ์ แทนการพิมพ์รหัสผ่าน เหมาะกับเครื่องที่ใช้ประจำ เช่น โน้ตบุ๊กที่ทำงาน ...
 - `guides/settings/admin-settings.md` — **การตั้งค่าแอดมิน**: หน้า ตั้งค่าแอดมิน ใช้ดูแลรายชื่อแอดมินขององค์กร สิทธิ์ Owner เพิ่ม แก้ไข และลบแอดมินได้เอง ไม่ต้องรอทีม ingfah เหมาะเมื่อมีคนเข้ามาทำงาน...
 - `guides/settings/user-roles.md` — **สิทธิ์ผู้ใช้งาน**: ทำความเข้าใจสิทธิ์ Owner และ Operator ว่าแต่ละสิทธิ์เข้าถึงอะไรได้บ้าง พร้อมวิธีให้สิทธิ์ Guest แบบชั่วคราว
-- `guides/settings/api-keys.md` — **API Keys**: สร้างและจัดการ API Key สำหรับเชื่อมต่อระบบภายนอกเข้ากับแพลตฟอร์มอิงฟ้า
+- `guides/settings/api-keys.md` — **API Keys**: สร้างและจัดการ API Key สำหรับเชื่อมต่อระบบภายนอกเข้ากับแพลตฟอร์มอิงฟ้า พร้อมกำหนดสิทธิ์ (scopes) และวันหมดอายุ
+- `guides/settings/secrets.md` — **Secrets**: เก็บคีย์และรหัสของระบบภายนอกแบบเข้ารหัส แล้วนำไปใส่ใน Tool หรือ Automation โดยไม่ฝังค่าจริงในหน้าจอ
 - `guides/settings/billing.md` — **บิลและการใช้งาน**: ดูโควต้าตามแพ็กเกจ ปริมาณการใช้งานในรอบบิล และดาวน์โหลดใบแจ้งหนี้/ใบเสร็จ
 - `guides/settings/data-retention.md` — **การเก็บรักษาข้อมูล (Data Retention)**: ตั้งค่าระยะเวลาเก็บไฟล์เสียงและข้อมูลการสนทนา ดูประวัติการลบข้อมูล และขอใบรับรองการเก็บรักษาข้อมูล
 - `guides/settings/activity-logs.md` — **ประวัติการใช้งาน (Activity Logs)**: ตรวจสอบว่าใครทำอะไรในระบบเมื่อไหร่ สำหรับงานตรวจสอบภายใน
