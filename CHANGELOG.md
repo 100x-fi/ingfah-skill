@@ -18,6 +18,12 @@ request `User-Agent` as `ingfah-skill/<version>`.
 - Hard denylist for `POST /v1/synthesize` (`NEVER_ALLOW_PATTERNS`); it uses
   `speechBearer` and must never be added to the skill allowlist.
 
+### Changed
+
+- Regenerated `references/user-guide/**` from `ingfah-public-docs` (PR-E):
+  Secrets, API Key scopes/expiry, wasm Tools / test-code, warm-transfer and
+  elapsed-time call detail, and related release-note links.
+
 ## [1.9.2] — 2026-11-05
 
 ### Added

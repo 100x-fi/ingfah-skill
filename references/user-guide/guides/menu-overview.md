@@ -13,4 +13,5 @@
 | AI Agent | สร้าง AI Agent แบบเสียงหรือ[แบบข้อความ](/guides/ai-agent/create-text-agent/) และสร้างทีม |
 | คลังความรู้ | อัปโหลดไฟล์ข้อมูลที่ต้องการให้ AI เรียนรู้ เช่น Policy, KB, Manual, SOP |
 | เบอร์โทรศัพท์ | ผูกเบอร์กับทีม AI Agent |
-| API Keys | สร้าง API key เพื่อเชื่อมต่อกับระบบ Ingfah |
+| API Keys | [สร้าง API Key](/guides/settings/api-keys/) กำหนดสิทธิ์และวันหมดอายุ เพื่อเชื่อมต่อกับระบบอิงฟ้า |
+| Secrets | [เก็บคีย์และรหัสของระบบภายนอก](/guides/settings/secrets/) แล้วนำไปใช้ใน Tool หรือ Automation |
