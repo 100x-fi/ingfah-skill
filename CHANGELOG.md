@@ -4,6 +4,14 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [1.11.0] — 2026-11-23
+
+### Changed
+
+- Regenerated `references/user-guide/**` from `ingfah-public-docs` `origin/main`
+  (access links / ลิงก์เข้าถึง, AI Agent folders with screenshots, Phone Tools
+  including Goal / Troubleshoot / Form, plus other docs updates through #154/#156).
+
 ## [1.10.0] — 2026-11-19
 
 ### Added
@@ -320,6 +328,8 @@ First versioned release.
   moved from `SKILL.md` into `references/`, so less loads on every use.
 - Install and update through the `skills` CLI; MIT license.
 
+[1.11.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.11.0
+[1.10.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.10.0
 [1.9.2]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.9.2
 [1.7.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.7.0
 [1.6.0]: https://github.com/100x-fi/ingfah-skill/releases/tag/v1.6.0
