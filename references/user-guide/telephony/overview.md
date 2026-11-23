@@ -34,9 +34,9 @@ Hostname / FQDN, IP Address และ Port จะส่งให้แยกต�
 
 | ประเด็น | IP Peering | SIP Registration |
 |---|---|---|
-| Persistent connection | ❌ ไม่มี — call ต่อ call | ✅ มี REGISTER session ตลอด |
+| Persistent connection | <span class="no">✕</span> ไม่มี — call ต่อ call | <span class="yes">✓</span> มี REGISTER session ตลอด |
 | Firewall ฝั่งลูกค้า | ต้องเปิด 2 ทิศ (in + out) | ไม่ต้องเปิดอะไรเพิ่ม |
 | การยืนยันตัวตน | IP whitelist 2 ฝั่ง | username + password |
 | ใครเริ่ม contact | ใครก็ได้ที่มีสาย | Ingfah SIP Server เป็นฝ่าย REGISTER ก่อนเสมอ |
-| รองรับ dynamic IP ฝั่งลูกค้า | ❌ ต้องใช้ public static IP | ✅ ได้ |
-| กำหนดทิศทางได้ | ✅ inbound / outbound / both | ✅ inbound / outbound / both |
+| รองรับ dynamic IP ฝั่งลูกค้า | <span class="no">✕</span> ต้องใช้ public static IP | <span class="yes">✓</span> ได้ |
+| กำหนดทิศทางได้ | <span class="yes">✓</span> inbound / outbound / both | <span class="yes">✓</span> inbound / outbound / both |
