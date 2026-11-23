@@ -14,9 +14,9 @@
 
 | สิทธิ์ | ดูรายชื่อแอดมิน | เพิ่ม แก้ไข และลบแอดมิน |
 | --- | --- | --- |
-| Owner | ✓ ได้ | ✓ ได้ |
-| Operator | ✓ ได้ | ✕ ไม่ได้ ไม่มีปุ่ม **เพิ่มแอดมิน** |
-| Security | ✓ ได้ | ✕ ไม่ได้ ไม่มีปุ่ม **เพิ่มแอดมิน** |
+| Owner | <span class="yes">✓</span> ได้ | <span class="yes">✓</span> ได้ |
+| Operator | <span class="yes">✓</span> ได้ | <span class="no">✕</span> ไม่ได้ ไม่มีปุ่ม **เพิ่มแอดมิน** |
+| Security | <span class="yes">✓</span> ได้ | <span class="no">✕</span> ไม่ได้ ไม่มีปุ่ม **เพิ่มแอดมิน** |
 
 ดูว่าแต่ละสิทธิ์เข้าถึงอะไรได้บ้างที่[สิทธิ์ผู้ใช้งาน](/guides/settings/user-roles/)
 

@@ -28,9 +28,9 @@ ingfah ถูกออกแบบมาเพื่อตอบสนองก�
 
 | มาตรฐาน | สถานะ | อ้างอิง |
 |---|---|---|
-| PDPA | ✅ Compliant | ใช้งานได้แล้ว |
-| ISO/IEC 27001:2022 (Information Security Management) | ✅ **ได้รับการรับรองแล้ว** | Certificate IS 843015, BSI |
-| ISO/IEC 20000-1:2018 (IT Service Management) | ✅ **ได้รับการรับรองแล้ว** | BSI |
+| PDPA | <span class="yes">✓</span> Compliant | ใช้งานได้แล้ว |
+| ISO/IEC 27001:2022 (Information Security Management) | <span class="yes">✓</span> **ได้รับการรับรองแล้ว** | Certificate IS 843015, BSI |
+| ISO/IEC 20000-1:2018 (IT Service Management) | <span class="yes">✓</span> **ได้รับการรับรองแล้ว** | BSI |
 | ISO 42001 (AI Management System) | 🔄 อยู่ระหว่าง Audit | Q3 2026 |
 | SOC 2 Type I | 🔄 อยู่ระหว่าง Audit | Q3 2026 |
 | SOC 2 Type II | 🔄 อยู่ระหว่าง Audit | Q3 2026 |
