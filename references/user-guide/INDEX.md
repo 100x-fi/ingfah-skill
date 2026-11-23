@@ -3,7 +3,7 @@
 A copy of the public Thai user guide at https://docs.ingfah.ai, one file per page.
 Do not edit these files by hand; regenerate them with
 `python3 scripts/sync_user_guide.py`.
-Copied from docs commit 82a47b1 (2026-11-19).
+Copied from docs commit 3815727 (2026-11-20).
 
 A link inside a page such as `/guides/ai-agent/try-call` is the file
 `guides/ai-agent/try-call.md` in this folder, and the public page
@@ -51,6 +51,7 @@ A link inside a page such as `/guides/ai-agent/try-call` is the file
 - `guides/ai-agent/create-text-agent.md` — **สร้าง AI Agent สำหรับแชทข้อความ**: เลือกประเภทข้อความ สร้างแบบร่าง และเตรียม Agent สำหรับตอบแชท
 - `guides/ai-agent/how-to-create-agent-flow.md` — **การสร้าง Flow บทสนทนา**: การสร้าง Flow บทสนทนา
 - `guides/ai-agent/manage-ai-agent.md` — **ปรับแต่ง AI Agent**: เรียนรู้ระบบแบบร่างและเผยแพร่ของ AI Agent เพื่อแก้ไขและทดสอบโดยไม่กระทบการใช้งานจริง
+- `guides/ai-agent/folders.md` — **โฟลเดอร์ AI Agent**: TODO
 - `guides/ai-agent/version-history.md` — **ดูประวัติเวอร์ชัน AI Agent**: ตรวจสอบแบบร่างและเวอร์ชันที่เผยแพร่ก่อนหน้า
 - `guides/ai-agent/try-call.md` — **ทดลองคุยกับ AI Agent ก่อนใช้งานจริง**: ทดลองคุยกับ AI Agent ก่อนใช้งานจริง
 - `guides/ai-agent/delete-ai-agent.md` — **การลบ AI Agent**: วิธีลบแบบร่างและลบ AI Agent ออกจากระบบ
@@ -61,6 +62,7 @@ A link inside a page such as `/guides/ai-agent/try-call` is the file
 - `guides/ai-agent/say-as-pronunciation.md` — **การกำหนดการออกเสียงด้วย <say-as>**: การกำหนดรูปแบบการออกเสียงของ AI Agent สำหรับจำนวนเงิน ตัวเลข เวลา และข้อมูลที่มีวิธีอ่านเฉพาะ
 - `guides/ai-agent/ai-agent-tools.md` — **การใช้ Tools ใน AI Agent**: การใช้งาน Tools เพื่อเพิ่มความสามารถให้ AI Agent ระหว่างการสนทนา
 - `guides/ai-agent/manage-tools.md` — **สร้างและจัดการ Tools**: สร้าง Tool เพื่อให้ AI Agent เรียกใช้ระบบภายนอกระหว่างสนทนา พร้อมทดสอบการทำงาน
+- `guides/ai-agent/phone-tools.md` — **Phone Tools**: TODO
 - `guides/ai-agent/ai-agent-visibility.md` — **การตั้งค่าการมองเห็น AI Agent**: การกำหนดสิทธิ์การมองเห็นและการเข้าถึง AI Agent
 - `guides/knowledge-base/overview.md` — **ภาพรวมคลังความรู้**: คลังความรู้คืออะไร ทำงานอย่างไร และช่วยให้ AI Agent ตอบคำถามลูกค้าได้แม่นยำขึ้นอย่างไร
 - `guides/knowledge-base/writing-faq-documents.md` — **เขียนเอกสาร FAQ ให้ AI Agent ค้นเจอ**: รูปแบบและเทคนิคการเขียนเอกสารคำถามที่พบบ่อย ให้ AI Agent ค้นหาเจอและตอบลูกค้าได้ถูกต้อง
@@ -98,6 +100,7 @@ A link inside a page such as `/guides/ai-agent/try-call` is the file
 - `guides/text-chat/chat-sessions.md` — **จัดการแชทกับลูกค้า**: ติดตามแชทที่ AI Agent ตอบ รับช่วงตอบเอง มอบหมายผู้ดูแล และปิดการสนทนา
 - `guides/text-chat/text-analytics.md` — **แดชบอร์ดแชทข้อความ**: ดูภาพรวมการตอบแชท จำนวนลูกค้า ผลลัพธ์ และช่วงเวลาที่มีข้อความมากที่สุด
 - `guides/inbound-outbound/all-calls.md` — **สายและแชททั้งหมด**: ค้นหา กรอง และส่งออกประวัติการโทรและแชทข้อความ
+- `guides/inbound-outbound/share-links.md` — **ลิงก์แชร์**: TODO
 - `guides/reports/text-analytics.md` — **ดูสถิติแชทข้อความ**: อ่านผลรวม แนวโน้มรายชั่วโมง และช่วงเวลาที่ลูกค้าส่งข้อความมาก
 - `guides/reports/voice-heatmap.md` — **ดูช่วงเวลาที่มีสายโทรมาก**: ใช้แผนภูมิความร้อนในแดชบอร์ดวิเคราะห์จำนวนสายตามวันและชั่วโมง
 - `guides/account-settings/overview.md` — **ภาพรวมการตั้งค่าบัญชี**: หน้า บัญชีของฉัน รวมการตั้งค่าที่เป็นของคุณคนเดียว ได้แก่ ข้อมูลโปรไฟล์ วิธีเข้าสู่ระบบ และอีเมลแจ้งเตือน การเปลี่ยนแปลงในหน้านี้มีผลกับบ...
