@@ -12,7 +12,7 @@ Skill ของอิงฟ้าเผยแพร่อย่างเป็�
 
 Claude Desktop app ติดตั้ง Skill ด้วยการอัปโหลดไฟล์ .zip
 
-1. ดาวน์โหลดไฟล์ Skill ที่ [ingfah-skill v1.10.0 (.zip)](https://github.com/100x-fi/ingfah-skill/archive/refs/tags/v1.10.0.zip) **ไม่ต้องแตกไฟล์**
+1. ดาวน์โหลดไฟล์ Skill ที่ [ingfah-skill v1.11.0 (.zip)](https://github.com/100x-fi/ingfah-skill/archive/refs/tags/v1.11.0.zip) **ไม่ต้องแตกไฟล์**
 2. เปิด Claude Desktop app แล้วไปที่ **Settings → Capabilities**
 3. ตรวจสอบว่าเปิด **Code execution and file creation** ไว้แล้ว เพราะ Skill ต้องใช้ความสามารถนี้
 4. ในส่วน **Skills** กด **Upload skill** แล้วเลือกไฟล์ .zip ที่ดาวน์โหลดมา
@@ -76,7 +76,9 @@ AI จะขอ **API Key** ให้วาง API Key ที่คัดลอ�
 
 Skill ingfah มีการปรับปรุงอย่างต่อเนื่อง ดูสิ่งที่เปลี่ยนในแต่ละเวอร์ชันได้ที่ [Release ของ ingfah-skill](https://github.com/100x-fi/ingfah-skill/releases)
 
-[เวอร์ชัน 1.10.0](https://github.com/100x-fi/ingfah-skill/releases/tag/v1.10.0) ขยาย API ที่ Skill ใช้ได้ให้ครอบคลุมพจนานุกรม TTS และผูกกับผลิตภัณฑ์, Secrets, ลิงก์แชร์, โฟลเดอร์ AI Agent, การเขียน phone-tool, CRM, และงานโทรออกเพิ่มเติม พร้อมอัปเดตคู่มือที่ AI ใช้อ้างอิง และเตือนเมื่อ Python ที่ใช้ไม่รองรับ TLS 1.3
+[เวอร์ชัน 1.11.0](https://github.com/100x-fi/ingfah-skill/releases/tag/v1.11.0) อัปเดตคู่มือใน Skill ให้ตรงกับเอกสารสาธารณะล่าสุด รวมลิงก์เข้าถึง โฟลเดอร์ AI Agent และ Phone Tools (Goal / Troubleshoot / Form)
+
+[เวอร์ชัน 1.10.0](https://github.com/100x-fi/ingfah-skill/releases/tag/v1.10.0) ขยาย API ที่ Skill ใช้ได้ให้ครอบคลุมพจนานุกรม TTS และผูกกับผลิตภัณฑ์, Secrets, ลิงก์แชร์, โฟลเดอร์ AI Agent, การเขียน phone-tool, CRM, และงานโทรออกเพิ่มเติม พร้อมเตือนเมื่อ Python ที่ใช้ไม่รองรับ TLS 1.3
 
 ดูวิธีจัดการสิทธิ์ API Key ที่ [API Keys](/guides/settings/api-keys/)
 

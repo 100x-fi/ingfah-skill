@@ -216,6 +216,7 @@ class IngfahApiTests(unittest.TestCase):
             ("DELETE", "/client/secrets/4"),
             ("GET", "/client/share-links"),
             ("POST", "/client/share-links"),
+            ("POST", "/client/acme/documents"),
             ("GET", "/client/ai-agent-folders"),
             ("POST", "/client/ai-agent-folders"),
             ("GET", "/client/phone-tools/catalog"),
@@ -234,6 +235,8 @@ class IngfahApiTests(unittest.TestCase):
             ("PATCH", "/crm/users/5"),
         ):
             self.assertTrue(ingfah_api._is_allowed(method, path), f"{method} {path}")
+        self.assertFalse(ingfah_api._is_allowed("POST", "/client/documents"))
+        self.assertFalse(ingfah_api._is_allowed("GET", "/client/acme/documents"))
         # Speech synthesize is speechBearer, not a client API key.
         self.assertTrue(ingfah_api._is_never_allowed("POST", "/v1/synthesize"))
         self.assertFalse(ingfah_api._is_allowed("POST", "/v1/synthesize"))

@@ -442,6 +442,11 @@ python3 scripts/ingfah_api.py GET /client/chat-sessions/{uuid}/record/download -
 - `POST /client/share-links`
 - `DELETE /client/share-links/{id}`
 
+### `knowledge_base:upload`
+
+- `POST /client/{client_slug}/documents` (multipart form upload; needs the
+  `enable-knowledge-base-api-key-upload` rollout and the client's own slug)
+
 ### `crm_client_users:read`
 
 - `GET /crm/user`

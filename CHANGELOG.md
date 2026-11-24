@@ -4,6 +4,17 @@ All notable changes to this skill are recorded here. Versions follow
 [Semantic Versioning](https://semver.org/); the version is also sent in the
 request `User-Agent` as `ingfah-skill/<version>`.
 
+## [Unreleased]
+
+### Added
+
+- Allowlist `POST /client/{client_slug}/documents` (`knowledge_base:upload`).
+
+### Changed
+
+- Regenerated `references/user-guide/**` from `ingfah-public-docs` `ef56b47`
+  (install guide now points at the v1.11.0 zip and release notes).
+
 ## [1.11.0] — 2026-11-23
 
 ### Changed
