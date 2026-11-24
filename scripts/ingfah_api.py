@@ -80,6 +80,7 @@ ROUTE_PATTERNS = (
     ("GET", re.compile(r"^/client/share-links/[^/]+/views$")),
     ("POST", re.compile(r"^/client/share-links$")),
     ("DELETE", re.compile(r"^/client/share-links/[^/]+$")),
+    ("POST", re.compile(r"^/client/[^/]+/documents$")),
     ("GET", re.compile(r"^/client/agents/[^/]+$")),
     ("GET", re.compile(r"^/client/agents/[^/]+/revisions(?:/[^/]+)?$")),
     ("POST", re.compile(r"^/client/agents$")),
